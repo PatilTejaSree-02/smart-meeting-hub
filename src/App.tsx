@@ -8,8 +8,10 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import MyBookings from "./pages/MyBookings";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRooms from "./pages/admin/AdminRooms";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminBookings from "./pages/admin/AdminBookings";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
@@ -25,10 +27,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route element={<DashboardLayout />}>
+              {/* User routes */}
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/book" element={<Dashboard />} />
               <Route path="/my-bookings" element={<MyBookings />} />
+              {/* Admin routes */}
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/rooms" element={<AdminRooms />} />
               <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/bookings" element={<AdminBookings />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
             </Route>
             <Route path="*" element={<NotFound />} />

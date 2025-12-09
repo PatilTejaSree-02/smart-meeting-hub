@@ -6,7 +6,7 @@ import {
   Building2,
   Users,
   BarChart3,
-  Settings,
+  ClipboardList,
   LogOut,
   X
 } from 'lucide-react';
@@ -22,13 +22,15 @@ interface SidebarProps {
 
 const userNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/dashboard' },
-  { icon: CalendarDays, label: 'Book a Room', to: '/dashboard' },
+  { icon: CalendarDays, label: 'Book a Room', to: '/book' },
   { icon: History, label: 'My Bookings', to: '/my-bookings' },
 ];
 
 const adminNavItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', to: '/admin/dashboard' },
   { icon: Building2, label: 'Manage Rooms', to: '/admin/rooms' },
   { icon: Users, label: 'Manage Users', to: '/admin/users' },
+  { icon: ClipboardList, label: 'All Bookings', to: '/admin/bookings' },
   { icon: BarChart3, label: 'Analytics', to: '/admin/analytics' },
 ];
 
@@ -40,6 +42,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     logout();
     navigate('/');
   };
+
+  const navItems = user?.role === 'admin' ? adminNavItems : userNavItems;
 
   return (
     <>
@@ -82,11 +86,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-6 px-4">
           <div className="space-y-1">
             <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 mb-3">
-              Main Menu
+              {user?.role === 'admin' ? 'Administration' : 'Main Menu'}
             </p>
-            {userNavItems.map((item) => (
+            {navItems.map((item) => (
               <NavLink
-                key={item.to + item.label}
+                key={item.to}
                 to={item.to}
                 onClick={onClose}
                 className={({ isActive }) =>
@@ -103,32 +107,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               </NavLink>
             ))}
           </div>
-
-          {user?.role === 'admin' && (
-            <div className="mt-8 space-y-1">
-              <p className="px-3 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50 mb-3">
-                Administration
-              </p>
-              {adminNavItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent"
-                    )
-                  }
-                >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
-          )}
         </nav>
 
         {/* User section */}

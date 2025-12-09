@@ -4,6 +4,7 @@ export interface User {
   name: string;
   role: 'user' | 'admin';
   avatar?: string;
+  status: 'active' | 'inactive';
   createdAt: Date;
 }
 
@@ -33,6 +34,8 @@ export interface Booking {
   title: string;
   attendees: number;
   status: 'confirmed' | 'pending' | 'cancelled';
+  purpose?: string;
+  cancellationReason?: string;
   createdAt: Date;
   room?: Room;
   user?: User;
@@ -40,6 +43,8 @@ export interface Booking {
 
 export interface RoomFilter {
   date?: string;
+  startTime?: string;
+  endTime?: string;
   capacity?: number;
   floor?: number;
   amenities?: string[];
@@ -50,9 +55,11 @@ export interface AnalyticsData {
   totalRooms: number;
   totalUsers: number;
   averageOccupancy: number;
+  activeBookingsToday: number;
   bookingsByRoom: { roomName: string; count: number }[];
   bookingsByDay: { day: string; count: number }[];
   peakHours: { hour: string; count: number }[];
+  weeklyTrend: { week: string; count: number }[];
 }
 
 export type AuthState = {

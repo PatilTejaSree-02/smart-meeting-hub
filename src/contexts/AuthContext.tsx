@@ -26,6 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user = mockUsers.find(u => u.email === email);
     
     if (user && password.length >= 6) {
+      if (user.status === 'inactive') {
+        setAuthState(prev => ({ ...prev, isLoading: false }));
+        return { success: false, error: 'Your account has been deactivated. Please contact an administrator.' };
+      }
+      
       setAuthState({
         user,
         isAuthenticated: true,
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       name,
       role: 'user',
+      status: 'active',
       createdAt: new Date(),
     };
     

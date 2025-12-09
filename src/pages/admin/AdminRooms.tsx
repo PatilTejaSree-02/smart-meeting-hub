@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, MoreHorizontal, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, MoreHorizontal, Search, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -25,8 +28,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { mockRooms, amenitiesList } from '@/data/mockData';
 import { Room } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +47,14 @@ export default function AdminRooms() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [deleteRoom, setDeleteRoom] = useState<Room | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    capacity: '',
+    floor: '',
+    description: '',
+    amenities: [] as string[],
+  });
   const { toast } = useToast();
 
   const filteredRooms = rooms.filter((room) =>
@@ -54,13 +73,177 @@ export default function AdminRooms() {
     });
   };
 
-  const handleDeleteRoom = (roomId: string) => {
-    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+  const handleDeleteRoom = () => {
+    if (!deleteRoom) return;
+    setRooms((prev) => prev.filter((r) => r.id !== deleteRoom.id));
     toast({
       title: 'Room deleted',
-      description: 'The room has been removed from the system.',
+      description: `${deleteRoom.name} has been removed from the system.`,
+    });
+    setDeleteRoom(null);
+  };
+
+  const handleAddRoom = () => {
+    if (!formData.name || !formData.capacity || !formData.floor) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newRoom: Room = {
+      id: String(rooms.length + 1),
+      name: formData.name,
+      capacity: parseInt(formData.capacity),
+      floor: parseInt(formData.floor),
+      description: formData.description,
+      amenities: formData.amenities,
+      image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
+      isActive: true,
+    };
+
+    setRooms([...rooms, newRoom]);
+    setIsAddDialogOpen(false);
+    resetForm();
+    toast({
+      title: 'Room Added',
+      description: `${newRoom.name} has been created successfully.`,
     });
   };
+
+  const handleEditRoom = () => {
+    if (!editingRoom || !formData.name || !formData.capacity || !formData.floor) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setRooms((prev) =>
+      prev.map((r) =>
+        r.id === editingRoom.id
+          ? {
+              ...r,
+              name: formData.name,
+              capacity: parseInt(formData.capacity),
+              floor: parseInt(formData.floor),
+              description: formData.description,
+              amenities: formData.amenities,
+            }
+          : r
+      )
+    );
+
+    setEditingRoom(null);
+    resetForm();
+    toast({
+      title: 'Room Updated',
+      description: 'Room information has been updated successfully.',
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      capacity: '',
+      floor: '',
+      description: '',
+      amenities: [],
+    });
+  };
+
+  const openEditDialog = (room: Room) => {
+    setFormData({
+      name: room.name,
+      capacity: String(room.capacity),
+      floor: String(room.floor),
+      description: room.description || '',
+      amenities: room.amenities,
+    });
+    setEditingRoom(room);
+  };
+
+  const openAddDialog = () => {
+    resetForm();
+    setIsAddDialogOpen(true);
+  };
+
+  const toggleAmenity = (amenity: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter((a) => a !== amenity)
+        : [...prev.amenities, amenity],
+    }));
+  };
+
+  const RoomFormContent = () => (
+    <div className="space-y-4 py-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Room Name *</Label>
+        <Input
+          id="name"
+          placeholder="e.g., Innovation Hub"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="capacity">Capacity *</Label>
+          <Input
+            id="capacity"
+            type="number"
+            placeholder="10"
+            min={1}
+            value={formData.capacity}
+            onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="floor">Floor *</Label>
+          <Input
+            id="floor"
+            type="number"
+            placeholder="1"
+            min={1}
+            value={formData.floor}
+            onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Input
+          id="description"
+          placeholder="Brief description of the room"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Facilities</Label>
+        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border rounded-lg">
+          {amenitiesList.map((amenity) => (
+            <div key={amenity} className="flex items-center space-x-2">
+              <Checkbox
+                id={amenity}
+                checked={formData.amenities.includes(amenity)}
+                onCheckedChange={() => toggleAmenity(amenity)}
+              />
+              <Label htmlFor={amenity} className="text-sm font-normal cursor-pointer">
+                {amenity}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -74,8 +257,8 @@ export default function AdminRooms() {
             Add, edit, and manage meeting room configurations.
           </p>
         </div>
-        <Button variant="accent" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="h-4 w-4" />
+        <Button variant="accent" onClick={openAddDialog}>
+          <Plus className="h-4 w-4 mr-2" />
           Add Room
         </Button>
       </div>
@@ -102,7 +285,7 @@ export default function AdminRooms() {
               <TableHead className="font-heading">Room</TableHead>
               <TableHead className="font-heading">Capacity</TableHead>
               <TableHead className="font-heading">Floor</TableHead>
-              <TableHead className="font-heading">Amenities</TableHead>
+              <TableHead className="font-heading">Facilities</TableHead>
               <TableHead className="font-heading">Status</TableHead>
               <TableHead className="text-right font-heading">Actions</TableHead>
             </TableRow>
@@ -125,7 +308,7 @@ export default function AdminRooms() {
                     </div>
                     <div>
                       <p className="font-medium">{room.name}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground line-clamp-1">
                         {room.description}
                       </p>
                     </div>
@@ -166,13 +349,13 @@ export default function AdminRooms() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setEditingRoom(room)}>
+                      <DropdownMenuItem onClick={() => openEditDialog(room)}>
                         <Pencil className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
-                        onClick={() => handleDeleteRoom(room.id)}
+                        onClick={() => setDeleteRoom(room)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
@@ -188,43 +371,70 @@ export default function AdminRooms() {
 
       {/* Add Room Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Add New Room</DialogTitle>
             <DialogDescription>
-              Create a new meeting room with its details and amenities.
+              Create a new meeting room with its details and facilities.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Room Name</Label>
-              <Input placeholder="e.g., Innovation Hub" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Capacity</Label>
-                <Input type="number" placeholder="10" min={1} />
-              </div>
-              <div className="space-y-2">
-                <Label>Floor</Label>
-                <Input type="number" placeholder="1" min={1} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Input placeholder="Brief description of the room" />
-            </div>
-          </div>
+          <RoomFormContent />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
               Cancel
             </Button>
-            <Button variant="accent" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant="accent" onClick={handleAddRoom}>
               Create Room
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Room Dialog */}
+      <Dialog open={!!editingRoom} onOpenChange={() => setEditingRoom(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Room</DialogTitle>
+            <DialogDescription>
+              Update room details and facilities.
+            </DialogDescription>
+          </DialogHeader>
+          <RoomFormContent />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingRoom(null)}>
+              Cancel
+            </Button>
+            <Button variant="accent" onClick={handleEditRoom}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteRoom} onOpenChange={() => setDeleteRoom(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Delete Room
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteRoom?.name}</strong>? This action
+              cannot be undone and will remove all associated booking history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRoom}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete Room
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

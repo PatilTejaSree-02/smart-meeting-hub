@@ -1,9 +1,20 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Search, MoreHorizontal, Shield, User as UserIcon, Mail } from 'lucide-react';
+import { 
+  Search, 
+  MoreHorizontal, 
+  Shield, 
+  User as UserIcon, 
+  Mail, 
+  Plus,
+  Pencil,
+  UserX,
+  UserCheck
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Table,
@@ -20,6 +31,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { mockUsers, mockBookings } from '@/data/mockData';
 import { User } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +64,14 @@ import { cn } from '@/lib/utils';
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [deactivateUser, setDeactivateUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'user' as 'user' | 'admin',
+  });
   const { toast } = useToast();
 
   const filteredUsers = users.filter(
@@ -40,18 +84,87 @@ export default function AdminUsers() {
     return mockBookings.filter((b) => b.userId === userId).length;
   };
 
-  const handleToggleRole = (userId: string) => {
+  const handleAddUser = () => {
+    if (!formData.name || !formData.email) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newUser: User = {
+      id: String(users.length + 1),
+      name: formData.name,
+      email: formData.email,
+      role: formData.role,
+      status: 'active',
+      createdAt: new Date(),
+    };
+
+    setUsers([...users, newUser]);
+    setIsAddDialogOpen(false);
+    setFormData({ name: '', email: '', role: 'user' });
+    toast({
+      title: 'User Added',
+      description: `${newUser.name} has been added successfully.`,
+    });
+  };
+
+  const handleEditUser = () => {
+    if (!editingUser || !formData.name || !formData.email) {
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setUsers((prev) =>
       prev.map((u) =>
-        u.id === userId
-          ? { ...u, role: u.role === 'admin' ? 'user' : 'admin' }
+        u.id === editingUser.id
+          ? { ...u, name: formData.name, email: formData.email, role: formData.role }
           : u
       )
     );
+
+    setEditingUser(null);
+    setFormData({ name: '', email: '', role: 'user' });
     toast({
-      title: 'Role updated',
-      description: 'The user role has been changed.',
+      title: 'User Updated',
+      description: 'User information has been updated successfully.',
     });
+  };
+
+  const handleToggleStatus = (user: User) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id
+          ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
+          : u
+      )
+    );
+    setDeactivateUser(null);
+    toast({
+      title: user.status === 'active' ? 'User Deactivated' : 'User Activated',
+      description: `${user.name} has been ${user.status === 'active' ? 'deactivated' : 'activated'}.`,
+    });
+  };
+
+  const openEditDialog = (user: User) => {
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+    setEditingUser(user);
+  };
+
+  const openAddDialog = () => {
+    setFormData({ name: '', email: '', role: 'user' });
+    setIsAddDialogOpen(true);
   };
 
   return (
@@ -63,9 +176,13 @@ export default function AdminUsers() {
             Manage Users
           </h1>
           <p className="text-muted-foreground mt-1">
-            View and manage user accounts and permissions.
+            Add, edit, and manage user accounts and permissions.
           </p>
         </div>
+        <Button variant="accent" onClick={openAddDialog}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add User
+        </Button>
       </div>
 
       {/* Search */}
@@ -90,7 +207,7 @@ export default function AdminUsers() {
               <TableHead className="font-heading">User</TableHead>
               <TableHead className="font-heading">Email</TableHead>
               <TableHead className="font-heading">Role</TableHead>
-              <TableHead className="font-heading">Bookings</TableHead>
+              <TableHead className="font-heading">Status</TableHead>
               <TableHead className="font-heading">Joined</TableHead>
               <TableHead className="text-right font-heading">Actions</TableHead>
             </TableRow>
@@ -112,6 +229,9 @@ export default function AdminUsers() {
                     </Avatar>
                     <div>
                       <p className="font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getUserBookingsCount(user.id)} bookings
+                      </p>
                     </div>
                   </div>
                 </TableCell>
@@ -139,7 +259,19 @@ export default function AdminUsers() {
                     {user.role}
                   </Badge>
                 </TableCell>
-                <TableCell>{getUserBookingsCount(user.id)} bookings</TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      'capitalize',
+                      user.status === 'active'
+                        ? 'border-success text-success bg-success/10'
+                        : 'border-destructive text-destructive bg-destructive/10'
+                    )}
+                  >
+                    {user.status}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-muted-foreground">
                   {format(user.createdAt, 'MMM d, yyyy')}
                 </TableCell>
@@ -151,11 +283,26 @@ export default function AdminUsers() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Profile</DropdownMenuItem>
-                      <DropdownMenuItem>View Bookings</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openEditDialog(user)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleToggleRole(user.id)}>
-                        {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                      <DropdownMenuItem
+                        className={user.status === 'active' ? 'text-destructive' : 'text-success'}
+                        onClick={() => setDeactivateUser(user)}
+                      >
+                        {user.status === 'active' ? (
+                          <>
+                            <UserX className="h-4 w-4 mr-2" />
+                            Deactivate
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            Activate
+                          </>
+                        )}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -165,6 +312,147 @@ export default function AdminUsers() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account. They will receive login credentials via email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="add-name">Full Name *</Label>
+              <Input
+                id="add-name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-email">Email Address *</Label>
+              <Input
+                id="add-email"
+                type="email"
+                placeholder="john@company.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: 'user' | 'admin') =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="accent" onClick={handleAddUser}>
+              Add User
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information and permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Full Name *</Label>
+              <Input
+                id="edit-name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address *</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                placeholder="john@company.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: 'user' | 'admin') =>
+                  setFormData({ ...formData, role: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingUser(null)}>
+              Cancel
+            </Button>
+            <Button variant="accent" onClick={handleEditUser}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deactivate Confirmation Dialog */}
+      <AlertDialog open={!!deactivateUser} onOpenChange={() => setDeactivateUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {deactivateUser?.status === 'active' ? 'Deactivate User' : 'Activate User'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {deactivateUser?.status === 'active'
+                ? `Are you sure you want to deactivate ${deactivateUser?.name}? They will no longer be able to log in or make bookings.`
+                : `Are you sure you want to activate ${deactivateUser?.name}? They will be able to log in and make bookings again.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deactivateUser && handleToggleStatus(deactivateUser)}
+              className={deactivateUser?.status === 'active' ? 'bg-destructive hover:bg-destructive/90' : 'bg-success hover:bg-success/90'}
+            >
+              {deactivateUser?.status === 'active' ? 'Deactivate' : 'Activate'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
