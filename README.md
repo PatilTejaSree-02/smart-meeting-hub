@@ -1,53 +1,80 @@
-# Welcome to your Lovable project
+# Smart Meeting Hub
 
-## Project info
+A comprehensive meeting management application that helps teams schedule, organize, and analyze their meetings efficiently.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🚀 Features
 
-## How can I edit this code?
+- 📅 Intuitive meeting scheduling
+- 👥 Participant management
+- 📊 Meeting analytics and insights
+- 🔔 Real-time notifications
+- 📱 Responsive design for all devices
+- 🔒 Secure authentication and authorization
 
-There are several ways of editing your application.
+## 🛠️ Installation
 
-**Use Lovable**
+### Prerequisites
+- Node.js (v16 or higher)
+- npm (v8 or higher)
+- Git
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Setup Instructions
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Clone the repository**
+   ```sh
+   git clone https://github.com/your-username/smart-meeting-hub.git
+   cd smart-meeting-hub
+   ```
 
-**Use your preferred IDE**
+2. **Install dependencies**
+   ```sh
+   npm install
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+3. **Set up environment variables**
+   Create a `.env` file in the root directory and add the necessary environment variables:
+   ```env
+   REACT_APP_API_URL=your_api_url_here
+   # Add other environment variables as needed
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+4. **Start the development server**
+   ```sh
+   npm start
+   ```
 
-Follow these steps:
+5. **Open in browser**
+   The application will be available at `http://localhost:3000`
+
+## 🧪 Running Tests
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm test
 ```
 
-**Edit a file directly in GitHub**
+## 🏗️ Building for Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+npm run build
+```
 
-**Use GitHub Codespaces**
+## 🤝 Contributing
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📧 Contact
+
+For any questions or feedback, please reach out to [your-email@example.com](mailto:your-email@example.com)
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
 ## What technologies are used for this project?
@@ -60,14 +87,4 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
