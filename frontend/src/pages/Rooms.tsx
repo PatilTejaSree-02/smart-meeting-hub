@@ -1,32 +1,23 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
+import { useEffect, useState } from 'react';
+import api from '@/services/api';
 
-interface Room {
-  id: number;
-  name: string;
-  capacity: number;
-}
-
-const Rooms = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
+export default function Rooms() {
+  const [rooms, setRooms] = useState([]);
 
   useEffect(() => {
-    api.get("/rooms")
-      .then((res) => setRooms(res.data))
-      .catch(() => alert("Failed to load rooms"));
+    api.get('/rooms')
+      .then(res => setRooms(res.data))
+      .catch(err => console.error(err));
   }, []);
 
   return (
     <div>
-      <h2>Rooms</h2>
-
-      {rooms.map((room) => (
+      {rooms.map((room: any) => (
         <div key={room.id}>
-          <b>{room.name}</b> — Capacity: {room.capacity}
+          <h3>{room.name}</h3>
+          <p>Capacity: {room.capacity}</p>
         </div>
       ))}
     </div>
   );
-};
-
-export default Rooms;
+}

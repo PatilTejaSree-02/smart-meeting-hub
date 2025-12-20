@@ -1,94 +1,41 @@
+import { useEffect, useState } from 'react';
+import api from '@/services/api';
 import { CalendarDays, Users, Building2, TrendingUp } from 'lucide-react';
 import { StatsCard } from '@/components/admin/StatsCard';
 import { AnalyticsChart } from '@/components/admin/AnalyticsChart';
-import { mockAnalytics } from '@/data/mockData';
 
 export default function AdminAnalytics() {
-  const bookingsByRoomData = mockAnalytics.bookingsByRoom.map((item) => ({
-    name: item.roomName.split(' ')[0],
-    value: item.count,
-  }));
+  const [analytics, setAnalytics] = useState<any>(null);
 
-  const bookingsByDayData = mockAnalytics.bookingsByDay.map((item) => ({
-    name: item.day,
-    value: item.count,
-  }));
+  useEffect(() => {
+    api.get('/admin/analytics')
+      .then(res => setAnalytics(res.data))
+      .catch(err => console.error(err));
+  }, []);
 
-  const peakHoursData = mockAnalytics.peakHours.map((item) => ({
-    name: item.hour,
-    value: item.count,
-  }));
+  if (!analytics) return <p>Loading analytics...</p>;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="font-heading text-2xl lg:text-3xl font-bold">
-          Analytics Dashboard
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Monitor room usage, booking trends, and workspace efficiency.
-        </p>
+      <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+
+      <div className="grid grid-cols-4 gap-4">
+        <StatsCard title="Total Bookings" value={analytics.totalBookings} icon={CalendarDays} />
+        <StatsCard title="Active Rooms" value={analytics.totalRooms} icon={Building2} />
+        <StatsCard title="Registered Users" value={analytics.totalUsers} icon={Users} />
+        <StatsCard title="Avg. Occupancy" value={`${analytics.averageOccupancy}%`} icon={TrendingUp} />
       </div>
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Bookings"
-          value={mockAnalytics.totalBookings}
-          icon={CalendarDays}
-          change="+23% from last month"
-          changeType="positive"
-        />
-        <StatsCard
-          title="Active Rooms"
-          value={mockAnalytics.totalRooms}
-          icon={Building2}
-          change="All operational"
-          changeType="positive"
-        />
-        <StatsCard
-          title="Registered Users"
-          value={mockAnalytics.totalUsers}
-          icon={Users}
-          change="+5 this week"
-          changeType="positive"
-        />
-        <StatsCard
-          title="Avg. Occupancy"
-          value={`${mockAnalytics.averageOccupancy}%`}
-          icon={TrendingUp}
-          change="+8% from last month"
-          changeType="positive"
-        />
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {analytics.bookingsByRoom.length > 0 && (
         <AnalyticsChart
-          data={bookingsByRoomData}
+          data={analytics.bookingsByRoom.map((r:any)=>({
+            name: r.roomName,
+            value: r.count
+          }))}
           type="bar"
           title="Bookings by Room"
         />
-        <AnalyticsChart
-          data={bookingsByDayData}
-          type="line"
-          title="Bookings by Day of Week"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <AnalyticsChart
-          data={peakHoursData}
-          type="bar"
-          title="Peak Booking Hours"
-        />
-        <AnalyticsChart
-          data={bookingsByRoomData}
-          type="pie"
-          title="Room Utilization Distribution"
-        />
-      </div>
+      )}
     </div>
   );
 }
