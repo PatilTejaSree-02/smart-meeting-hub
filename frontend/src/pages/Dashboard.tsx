@@ -1,30 +1,75 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CalendarDays, Clock, TrendingUp } from 'lucide-react';
 import { RoomCard } from '@/components/rooms/RoomCard';
 import { RoomFilters } from '@/components/rooms/RoomFilters';
 import { BookingModal } from '@/components/booking/BookingModal';
 import { StatsCard } from '@/components/admin/StatsCard';
-import { mockRooms, mockBookings } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { Room, RoomFilter } from '@/types';
+import api from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [filters, setFilters] = useState<RoomFilter>({});
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch rooms and bookings
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [roomsResponse, bookingsResponse] = await Promise.all([
+          api.get('/rooms'),
+          api.get('/bookings')
+        ]);
+        
+        // Transform backend room data to frontend Room type
+        const transformedRooms = roomsResponse.data.map((room: any) => ({
+          id: room.id.toString(),
+          name: room.name,
+          capacity: room.capacity,
+          floor: room.floor,
+          amenities: room.amenities || [],
+          image: `https://images.unsplash.com/photo-${Math.random() > 0.5 ? '1497366216548' : '1497366811353'}-37526070297c?w=800&q=80`,
+          isActive: room.active !== undefined ? room.active : true,
+          description: room.description || '',
+        }));
+        
+        setRooms(transformedRooms);
+        setBookings(bookingsResponse.data);
+      } catch (error: any) {
+        console.error('Failed to fetch data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load rooms and bookings',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [toast]);
 
   const filteredRooms = useMemo(() => {
-    return mockRooms.filter((room) => {
+    return rooms.filter((room) => {
       if (filters.capacity && room.capacity < filters.capacity) return false;
       if (filters.floor && room.floor !== filters.floor) return false;
+      if (!room.isActive) return false;
       return true;
     });
-  }, [filters]);
+  }, [rooms, filters]);
 
-  const userBookings = mockBookings.filter((b) => b.userId === user?.id);
+  const userBookings = bookings.filter((b) => b.userId === parseInt(user?.id || '0'));
   const upcomingBookings = userBookings.filter(
-    (b) => new Date(b.date) >= new Date() && b.status !== 'cancelled'
+    (b) => new Date(b.bookingDate) >= new Date() && b.status !== 'cancelled'
   );
 
   const handleBookRoom = (room: Room) => {
@@ -32,7 +77,7 @@ export default function Dashboard() {
     setIsBookingModalOpen(true);
   };
 
-  const handleConfirmBooking = (booking: {
+  const handleConfirmBooking = async (booking: {
     roomId: string;
     date: string;
     startTime: string;
@@ -40,9 +85,54 @@ export default function Dashboard() {
     title: string;
     attendees: number;
   }) => {
-    console.log('Booking confirmed:', booking);
-    // In a real app, this would make an API call
+    try {
+      await api.post('/bookings', {
+        roomId: parseInt(booking.roomId),
+        title: booking.title,
+        bookingDate: booking.date,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+      });
+
+      toast({
+        title: 'Booking confirmed!',
+        description: `Your room has been booked successfully.`,
+      });
+
+      // Refresh bookings
+      const response = await api.get('/bookings');
+      setBookings(response.data);
+      
+      setIsBookingModalOpen(false);
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      
+      let errorMessage = 'Could not create booking';
+      if (error.response?.status === 409) {
+        errorMessage = 'Room already booked for this time slot';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data) {
+        errorMessage = typeof error.response.data === 'string' 
+          ? error.response.data 
+          : errorMessage;
+      }
+      
+      toast({
+        title: 'Booking failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -60,7 +150,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatsCard
           title="Available Rooms"
-          value={mockRooms.filter((r) => r.isActive).length}
+          value={rooms.filter((r) => r.isActive).length}
           icon={CalendarDays}
           change="All rooms operational"
           changeType="positive"
