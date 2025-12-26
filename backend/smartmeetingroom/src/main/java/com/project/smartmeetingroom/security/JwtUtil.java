@@ -1,7 +1,10 @@
 package com.project.smartmeetingroom.security;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -14,44 +17,62 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtUtil {
 
-    // Token validity: 24 hours
-    private static final long JWT_EXPIRATION_MS = 24 * 60 * 60 * 1000;
+    // 🔒 Injected from application.yml or application.properties
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
-    // Secret key (for now hardcoded, later move to env)
-    private final SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.expiration:86400000}") // 1 day in ms
+    private long jwtExpirationMs;
 
-    // Generate token
+    // ✅ Convert string key to proper SecretKey
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+
+    // ✅ Generate a JWT with custom claims
     public String generateToken(Long userId, Long tenantId, String role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("tenantId", tenantId);
+        claims.put("role", role);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .claim("tenantId", tenantId)
-                .claim("role", role)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS))
-                .signWith(key)
+                .setClaims(claims)
+                .setSubject(String.valueOf(userId)) // Subject = userId
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Extract all claims
+    // ✅ Extract all claims from token
     public Claims getClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
-    // Extract userId
+    // ✅ Extract specific data from claims
     public Long getUserId(String token) {
         return Long.parseLong(getClaims(token).getSubject());
     }
 
-    // Validate token
+    public Long getTenantId(String token) {
+        Object tenantId = getClaims(token).get("tenantId");
+        return tenantId != null ? Long.parseLong(tenantId.toString()) : null;
+    }
+
+    public String getRole(String token) {
+        Object role = getClaims(token).get("role");
+        return role != null ? role.toString() : null;
+    }
+
+    // ✅ Validate token (signature + expiration)
     public boolean isTokenValid(String token) {
         try {
-            getClaims(token);
-            return true;
+            Claims claims = getClaims(token);
+            return claims.getExpiration().after(new Date());
         } catch (Exception e) {
             return false;
         }

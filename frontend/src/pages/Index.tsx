@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,24 +13,23 @@ export default function Index() {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const { login, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated - role-based redirect
-  if (isAuthenticated && user) {
-    if (user.role === 'admin') {
-      navigate('/admin/dashboard');
-    } else {
-      navigate('/dashboard');
+  // ✅ Redirect after authentication safely
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      if (user.role === 'admin') navigate('/admin/dashboard');
+      else navigate('/dashboard');
     }
-    return null;
-  }
+  }, [isAuthenticated, user, navigate]);
 
+  // ✅ Handle login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Validation Error',
@@ -40,18 +39,30 @@ export default function Index() {
       return;
     }
 
-    const result = await login(email, password);
-    
-    if (result.success) {
+    try {
+      const result = await login(email, password);
+
+      if (result.success && result.user) {
+        toast({
+          title: 'Welcome back!',
+          description: 'You have successfully logged in.',
+        });
+
+        // Redirect after successful login (role-based)
+        if (result.user.role === 'admin') navigate('/admin/dashboard');
+        else navigate('/dashboard');
+      } else {
+        toast({
+          title: 'Login failed',
+          description: result.error || 'Please check your credentials.',
+          variant: 'destructive',
+        });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
       toast({
-        title: 'Welcome back!',
-        description: 'You have successfully logged in.',
-      });
-      // Role-based redirect will be handled by auth context
-    } else {
-      toast({
-        title: 'Login failed',
-        description: result.error || 'Please check your credentials.',
+        title: 'Unexpected Error',
+        description: 'Something went wrong. Please try again later.',
         variant: 'destructive',
       });
     }
@@ -113,7 +124,11 @@ export default function Index() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -125,7 +140,10 @@ export default function Index() {
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
-                <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="remember"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   Remember me
                 </Label>
               </div>
@@ -156,18 +174,28 @@ export default function Index() {
 
           {/* Demo accounts */}
           <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border/50">
-            <p className="text-sm font-medium text-foreground mb-2">Demo Accounts:</p>
+            <p className="text-sm font-medium text-foreground mb-2">
+              Demo Accounts:
+            </p>
             <div className="space-y-1 text-sm text-muted-foreground">
-              <p><span className="font-medium text-foreground">Admin:</span> admin@company.com</p>
-              <p><span className="font-medium text-foreground">User:</span> john.doe@company.com</p>
-              <p className="text-xs mt-2 text-muted-foreground/80">Password: any 6+ characters</p>
+              <p>
+                <span className="font-medium text-foreground">Admin:</span>{' '}
+                admin@acme.com
+              </p>
+              <p>
+                <span className="font-medium text-foreground">User:</span>{' '}
+                john.doe@acme.com
+              </p>
+              <p className="text-xs mt-2 text-muted-foreground/80">
+                Password: any 6+ characters
+              </p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © 2024 SMRMS. All rights reserved.
+          © 2025 SMRMS. All rights reserved.
         </p>
       </div>
     </div>

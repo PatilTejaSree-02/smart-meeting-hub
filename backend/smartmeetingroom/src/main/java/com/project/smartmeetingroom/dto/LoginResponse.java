@@ -1,7 +1,6 @@
 package com.project.smartmeetingroom.dto;
 
 public class LoginResponse {
-
     private String token;
     private Long userId;
     private Long tenantId;
