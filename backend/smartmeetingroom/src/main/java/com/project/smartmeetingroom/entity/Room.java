@@ -10,86 +10,67 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
-
     @Column(nullable = false)
     private String name;
 
-    private String description;
+    private String location;
 
-    private int capacity;
+    @Column(nullable = false)
+    private Integer capacity;
 
-    private int floor;
+    @Column(nullable = false)
+    private Boolean active = true;
 
-    private String building;
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
 
-    @Column(name = "is_active")
-    private boolean active = true;
-
-    // ===== Getters & Setters =====
+    public Room() {}
 
     public Long getId() {
         return id;
-    }
-
-    public Long getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public Integer getCapacity() {
+        return capacity;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getCapacity() {
-        return capacity;
-    }
-
-    public void setCapacity(int capacity) {
+    public void setCapacity(Integer capacity) {
         this.capacity = capacity;
     }
 
-    public int getFloor() {
-        return floor;
-    }
-
-    public void setFloor(int floor) {
-        this.floor = floor;
-    }
-
-    public String getBuilding() {
-        return building;
-    }
-
-    public void setBuilding(String building) {
-        this.building = building;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 }

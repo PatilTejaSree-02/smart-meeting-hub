@@ -10,74 +10,34 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tenant_id")
-    private Long tenantId;
-
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
+    @Column(nullable = false)
+    private String role; // ROLE_ADMIN, ROLE_USER
 
     @Column(nullable = false)
-    private String role;
+    private Boolean active = true;
 
-    @Column(nullable = false)
-    private String status;
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
 
-    // ===== Getters & Setters =====
+    public User() {}
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
+    public String getRole() { return role; }
+    public Boolean getActive() { return active; }
+    public Long getTenantId() { return tenantId; }
 
-    public Long getTenantId() {
-        return tenantId;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public void setId(Long id) { this.id = id; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setRole(String role) { this.role = role; }
+    public void setActive(Boolean active) { this.active = active; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 }

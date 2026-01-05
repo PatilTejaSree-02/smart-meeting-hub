@@ -1,53 +1,97 @@
 package com.project.smartmeetingroom.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-
-import com.project.smartmeetingroom.repository.BookingRepository;
-import com.project.smartmeetingroom.repository.RoomRepository;
-import com.project.smartmeetingroom.repository.UserRepository;
-import com.project.smartmeetingroom.dto.DayCountDTO;
-import com.project.smartmeetingroom.dto.RoomCountDTO;
+import com.project.smartmeetingroom.repository.*;
+import com.project.smartmeetingroom.security.JwtContextUtil;
+import com.project.smartmeetingroom.entity.*;
 
 @RestController
 @RequestMapping("/api/admin/analytics")
-@CrossOrigin(origins = "http://localhost:8081")
 public class AdminAnalyticsController {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final JwtContextUtil jwt;
+    private final TenantRepository tenantRepo;
+    private final UserRepository userRepo;
+    private final RoomRepository roomRepo;
+    private final BookingRepository bookingRepo;
 
-    @Autowired
-    private UserRepository userRepository;
+    public AdminAnalyticsController(
+            JwtContextUtil jwt,
+            TenantRepository tenantRepo,
+            UserRepository userRepo,
+            RoomRepository roomRepo,
+            BookingRepository bookingRepo) {
 
-    @Autowired
-    private BookingRepository bookingRepository;
+        this.jwt = jwt;
+        this.tenantRepo = tenantRepo;
+        this.userRepo = userRepo;
+        this.roomRepo = roomRepo;
+        this.bookingRepo = bookingRepo;
+    }
 
-    @GetMapping
-    public Map<String, Object> getAnalytics() {
-        Map<String, Object> analytics = new HashMap<>();
+    private Long tenantId() {
+        return jwt.getTenantId();
+    }
 
-        analytics.put("totalRooms", roomRepository.count());
-        analytics.put("totalUsers", userRepository.count());
-        analytics.put("totalBookings", bookingRepository.count());
+    // --------------------------------------------------
+    // SUMMARY
+    // --------------------------------------------------
+    @GetMapping("/summary")
+    public Map<String, Object> summary() {
 
-        long activeToday = bookingRepository.countByBookingDateAndStatus(
-                java.time.LocalDate.now(), "confirmed");
-        analytics.put("activeBookingsToday", activeToday);
+        if (!"ROLE_ADMIN".equals(jwt.getRole())) {
+            throw new RuntimeException("Forbidden");
+        }
 
-        long totalRooms = roomRepository.count();
-        long totalBookings = bookingRepository.count();
-        analytics.put("averageOccupancy",
-                totalRooms > 0 ? (int) ((double) totalBookings / totalRooms * 10) : 0);
+        Long tenantId = tenantId();
 
-        List<RoomCountDTO> bookingsByRoom = bookingRepository.countBookingsByRoom();
-        List<DayCountDTO> bookingsByDay = bookingRepository.countBookingsByDay();
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalUsers", userRepo.countByTenantId(tenantId));
+        response.put("totalRooms", roomRepo.countByTenantId(tenantId));
+        response.put("totalBookings", bookingRepo.countByTenantId(tenantId));
+        response.put(
+                "todayBookings",
+                bookingRepo.countTodayBookings(tenantId, LocalDate.now())
+        );
 
-        analytics.put("bookingsByRoom", bookingsByRoom);
-        analytics.put("bookingsByDay", bookingsByDay);
+        return response;
+    }
 
-        return analytics;
+    // --------------------------------------------------
+    // BOOKINGS BY DAY
+    // --------------------------------------------------
+    @GetMapping("/bookings-by-day")
+    public List<Map<String, Object>> bookingsByDay() {
+
+        List<Object[]> rows = bookingRepo.bookingsCountByDay(tenantId());
+
+        return rows.stream().map(row -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("day", row[0]);
+            m.put("count", row[1]);
+            return m;
+        }).toList();
+    }
+
+    // --------------------------------------------------
+    // BOOKINGS BY ROOM
+    // --------------------------------------------------
+    @GetMapping("/bookings-by-room")
+    public List<Map<String, Object>> bookingsByRoom() {
+
+        List<Object[]> rows = bookingRepo.bookingsCountByRoom(tenantId());
+
+        return rows.stream().map(row -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("roomId", row[0]);
+            m.put("count", row[1]);
+            return m;
+        }).toList();
     }
 }

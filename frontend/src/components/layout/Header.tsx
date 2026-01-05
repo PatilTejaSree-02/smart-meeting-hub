@@ -57,9 +57,9 @@ export function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user?.name?.charAt(0) || 'U'}
+                <AvatarImage src={undefined} />
+                <AvatarFallback>
+                  {user?.email?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -67,7 +67,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.name}</p>
+                <p className="text-sm font-medium">{user?.email}</p>
                 <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </DropdownMenuLabel>
@@ -78,11 +78,12 @@ export function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuItem onClick={() => navigate('/my-bookings')}>
               My Bookings
             </DropdownMenuItem>
-            {user?.role === 'admin' && (
-              <DropdownMenuItem onClick={() => navigate('/admin/analytics')}>
-                Admin Panel
-              </DropdownMenuItem>
-            )}
+            {user?.role === "ROLE_ADMIN" && (
+            <DropdownMenuItem onClick={() => navigate("/admin/dashboard")}>
+            Admin Panel
+            </DropdownMenuItem>
+        )}
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               Log out

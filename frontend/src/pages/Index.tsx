@@ -14,19 +14,26 @@ export default function Index() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login, isLoading, isAuthenticated, user } = useAuth();
+  // ✅ FIX: use correct values from AuthContext
+  const { login, loading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // ✅ Redirect after authentication safely
+  // ✅ Redirect AFTER login (safe)
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if (user.role === 'admin') navigate('/admin/dashboard');
-      else navigate('/dashboard');
+    if (!loading && isAuthenticated && user) {
+      if (
+        user.role === 'ROLE_ADMIN' ||
+        user.role === 'ROLE_SUPER_ADMIN'
+      ) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [loading, isAuthenticated, user, navigate]);
 
-  // ✅ Handle login
+  // ✅ Handle login (AuthContext-compatible)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -40,29 +47,27 @@ export default function Index() {
     }
 
     try {
-      const result = await login(email, password);
+      const loggedInUser = await login(email, password);
 
-      if (result.success && result.user) {
-        toast({
-          title: 'Welcome back!',
-          description: 'You have successfully logged in.',
-        });
+      toast({
+        title: 'Welcome back!',
+        description: 'You have successfully logged in.',
+      });
 
-        // Redirect after successful login (role-based)
-        if (result.user.role === 'admin') navigate('/admin/dashboard');
-        else navigate('/dashboard');
+      // Role-based redirect
+      if (
+        loggedInUser.role === 'ROLE_ADMIN' ||
+        loggedInUser.role === 'ROLE_SUPER_ADMIN'
+      ) {
+        navigate('/admin/dashboard');
       } else {
-        toast({
-          title: 'Login failed',
-          description: result.error || 'Please check your credentials.',
-          variant: 'destructive',
-        });
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error('Login error:', err);
       toast({
-        title: 'Unexpected Error',
-        description: 'Something went wrong. Please try again later.',
+        title: 'Login failed',
+        description: 'Invalid email or password.',
         variant: 'destructive',
       });
     }
@@ -138,7 +143,9 @@ export default function Index() {
                 <Checkbox
                   id="remember"
                   checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setRememberMe(checked as boolean)
+                  }
                 />
                 <Label
                   htmlFor="remember"
@@ -159,9 +166,9 @@ export default function Index() {
               type="submit"
               className="w-full h-11"
               variant="hero"
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
               ) : (
                 <>
@@ -184,10 +191,10 @@ export default function Index() {
               </p>
               <p>
                 <span className="font-medium text-foreground">User:</span>{' '}
-                john.doe@acme.com
+                user@acme.com
               </p>
               <p className="text-xs mt-2 text-muted-foreground/80">
-                Password: any 6+ characters
+                Password: password123
               </p>
             </div>
           </div>

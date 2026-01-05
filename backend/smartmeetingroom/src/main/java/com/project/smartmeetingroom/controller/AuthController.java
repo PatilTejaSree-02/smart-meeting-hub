@@ -1,12 +1,10 @@
 package com.project.smartmeetingroom.controller;
 
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.project.smartmeetingroom.dto.LoginRequest;
 import com.project.smartmeetingroom.dto.LoginResponse;
@@ -16,103 +14,60 @@ import com.project.smartmeetingroom.security.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:8081") // Frontend URL
+@CrossOrigin(origins = "http://localhost:8081")
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepo;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder encoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    /**
-     * ✅ LOGIN ENDPOINT
-     * This handles authentication of users.
-     * It checks the email & password, and returns a JWT token if valid.
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
-
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password");
-        }
-
-        User user = userOpt.get();
-
-        // Verify password (BCrypt hash)
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password");
-        }
-
-        // Check user status
-        if (!"active".equalsIgnoreCase(user.getStatus())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("User account inactive");
-        }
-
-        // Generate JWT Token
-        String token = jwtUtil.generateToken(
-                user.getId(),
-                user.getTenantId(),
-                user.getRole()
-        );
-
-        // Build response object
-        LoginResponse response = new LoginResponse(
-                token,
-                user.getId(),
-                user.getTenantId(),
-                user.getRole(),
-                user.getEmail()
-        );
-
-        return ResponseEntity.ok(response);
+    public AuthController(
+            UserRepository userRepo,
+            JwtUtil jwtUtil,
+            PasswordEncoder encoder) {
+        this.userRepo = userRepo;
+        this.jwtUtil = jwtUtil;
+        this.encoder = encoder;
     }
 
-    /**
-     * ✅ REGISTER ENDPOINT
-     * Optional — allows creation of a new user.
-     */
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody LoginRequest request) {
-        if (request.getEmail() == null || request.getPassword() == null) {
-            return ResponseEntity.badRequest().body("Email and password are required");
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @RequestBody LoginRequest request) {
+
+        if (request.email() == null || request.password() == null) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Email and password are required"
+            );
         }
 
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("User already exists");
+        User user = userRepo.findByEmail(request.email())
+            .orElseThrow(() ->
+                new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Invalid email or password"
+                )
+            );
+
+        if (!encoder.matches(request.password(), user.getPasswordHash())) {
+            throw new ResponseStatusException(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid email or password"
+            );
         }
 
-        // Create new user
-        User newUser = new User();
-        newUser.setEmail(request.getEmail());
-        newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole("user");
-        newUser.setStatus("active");
-
-        userRepository.save(newUser);
+        // ✅ CORRECT FIX
+        Long tenantId = user.getTenantId();
 
         String token = jwtUtil.generateToken(
-                newUser.getId(),
-                newUser.getTenantId(),
-                newUser.getRole()
+            user.getId(),
+            user.getEmail(),
+            user.getRole(),
+            tenantId
         );
 
-        LoginResponse response = new LoginResponse(
-                token,
-                newUser.getId(),
-                newUser.getTenantId(),
-                newUser.getRole(),
-                newUser.getEmail()
+        return ResponseEntity.ok(
+            new LoginResponse(token, user)
         );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

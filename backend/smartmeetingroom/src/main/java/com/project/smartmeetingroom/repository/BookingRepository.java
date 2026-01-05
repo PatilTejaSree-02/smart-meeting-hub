@@ -1,60 +1,82 @@
 package com.project.smartmeetingroom.repository;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import com.project.smartmeetingroom.entity.Booking;
-import com.project.smartmeetingroom.dto.DayCountDTO;
-import com.project.smartmeetingroom.dto.RoomCountDTO;
 
-@Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    // ✅ 1️⃣ Check overlapping bookings (your existing logic)
-    @Query("""
-        SELECT b FROM Booking b
-        WHERE b.tenantId = :tenantId
-          AND b.roomId = :roomId
-          AND b.bookingDate = :bookingDate
-          AND (
-              (:startTime < b.endTime AND :endTime > b.startTime)
-          )
-    """)
-    List<Booking> findOverlappingBookings(
-            Long tenantId,
+    // --------------------------------------------------
+    // USER BOOKINGS
+    // --------------------------------------------------
+    List<Booking> findByUserIdAndTenantId(Long userId, Long tenantId);
+
+    // --------------------------------------------------
+    // CONFLICT CHECKING
+    // --------------------------------------------------
+    boolean existsByRoomIdAndTenantIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
             Long roomId,
-            LocalDate bookingDate,
-            LocalTime startTime,
-            LocalTime endTime
+            Long tenantId,
+            String status,
+            LocalDateTime endTime,
+            LocalDateTime startTime
     );
 
-    // ✅ 2️⃣ Get bookings for a specific user
-    List<Booking> findByTenantIdAndUserId(Long tenantId, Long userId);
+    boolean existsByRoomIdAndTenantIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
+            Long roomId,
+            Long tenantId,
+            String status,
+            LocalDateTime endTime,
+            LocalDateTime startTime,
+            Long excludeId
+    );
 
-    // ✅ 3️⃣ Count bookings by day (used in dashboard charts)
+    // --------------------------------------------------
+    // SUMMARY COUNTS
+    // --------------------------------------------------
+    long countByTenantId(Long tenantId);
+
     @Query("""
-        SELECT b.bookingDate AS day, COUNT(b) AS count
+        SELECT COUNT(b)
         FROM Booking b
-        GROUP BY b.bookingDate
-        ORDER BY b.bookingDate DESC
+        WHERE b.tenantId = :tenantId
+          AND DATE(b.startTime) = :date
     """)
-    List<DayCountDTO> countBookingsByDay();
+    long countTodayBookings(
+            @Param("tenantId") Long tenantId,
+            @Param("date") LocalDate date
+    );
 
-    // ✅ 4️⃣ Count bookings per room (requires join with rooms)
-    @Query(value = """
-        SELECT r.name AS roomName, COUNT(b.id) AS count
-        FROM bookings b
-        JOIN rooms r ON b.room_id = r.id
-        GROUP BY r.name
-        ORDER BY COUNT(b.id) DESC
-    """, nativeQuery = true)
-    List<RoomCountDTO> countBookingsByRoom();
+    // --------------------------------------------------
+    // ANALYTICS
+    // --------------------------------------------------
 
-    // ✅ 5️⃣ Count bookings for today (for active bookings stat)
-    long countByBookingDateAndStatus(LocalDate bookingDate, String status);
+    // returns: [ LocalDate, Long ]
+    @Query("""
+        SELECT DATE(b.startTime), COUNT(b)
+        FROM Booking b
+        WHERE b.tenantId = :tenantId
+        GROUP BY DATE(b.startTime)
+        ORDER BY DATE(b.startTime)
+    """)
+    List<Object[]> bookingsCountByDay(
+            @Param("tenantId") Long tenantId
+    );
+
+    // returns: [ Long roomId, Long count ]
+    @Query("""
+        SELECT b.roomId, COUNT(b)
+        FROM Booking b
+        WHERE b.tenantId = :tenantId
+        GROUP BY b.roomId
+    """)
+    List<Object[]> bookingsCountByRoom(
+            @Param("tenantId") Long tenantId
+    );
 }

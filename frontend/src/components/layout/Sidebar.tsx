@@ -43,7 +43,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     navigate('/');
   };
 
-  const navItems = user?.role === 'admin' ? adminNavItems : userNavItems;
+  const isAdmin =
+  user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_SUPER_ADMIN';
+
+const navItems = isAdmin ? adminNavItems : userNavItems;
 
   return (
     <>
@@ -113,11 +116,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="border-t border-sidebar-border p-4">
           <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent/50">
             <div className="h-10 w-10 rounded-full bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground font-semibold">
-              {user?.name?.charAt(0) || 'U'}
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">
-                {user?.name}
+                {user?.email}
               </p>
               <p className="text-xs text-sidebar-foreground/60 capitalize">
                 {user?.role}

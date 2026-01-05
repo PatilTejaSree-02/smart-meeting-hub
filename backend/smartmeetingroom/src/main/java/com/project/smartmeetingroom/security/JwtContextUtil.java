@@ -8,24 +8,22 @@ import io.jsonwebtoken.Claims;
 @Component
 public class JwtContextUtil {
 
-    public Long getUserId() {
-        Claims claims = (Claims) SecurityContextHolder.getContext()
+    private Claims claims() {
+        return (Claims) SecurityContextHolder
+                .getContext()
                 .getAuthentication()
                 .getDetails();
-        return Long.parseLong(claims.getSubject());
+    }
+
+    public Long getUserId() {
+        return claims().get("userId", Long.class);
     }
 
     public Long getTenantId() {
-        Claims claims = (Claims) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getDetails();
-        return claims.get("tenantId", Long.class);
+        return claims().get("tenantId", Long.class);
     }
 
     public String getRole() {
-        Claims claims = (Claims) SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getDetails();
-        return claims.get("role", String.class);
+        return claims().get("role", String.class);
     }
 }

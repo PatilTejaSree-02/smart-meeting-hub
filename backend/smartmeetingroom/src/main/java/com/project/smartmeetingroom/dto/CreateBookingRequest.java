@@ -1,53 +1,54 @@
 package com.project.smartmeetingroom.dto;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 public class CreateBookingRequest {
 
     private Long roomId;
-    private String title;
-    private LocalDate bookingDate;
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private Long userId;
+    private Long tenantId;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
+
+    public CreateBookingRequest() {}
 
     public Long getRoomId() {
         return roomId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
     public void setRoomId(Long roomId) {
         this.roomId = roomId;
     }
 
-    public String getTitle() {
-        return title;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
-    public LocalDate getBookingDate() {
-        return bookingDate;
-    }
-
-    public void setBookingDate(LocalDate bookingDate) {
-        this.bookingDate = bookingDate;
-    }
-
-    public LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalTime startTime) {
+    public void setStartTime(LocalDateTime startTime) {
         this.startTime = startTime;
     }
 
-    public LocalTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalTime endTime) {
+    public void setEndTime(LocalDateTime endTime) {
         this.endTime = endTime;
     }
 }

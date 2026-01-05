@@ -1,5 +1,9 @@
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
 
 spring:
   application:
@@ -20,11 +24,13 @@ spring:
       hibernate:
         format_sql: true
 
+jwt:
+  secret: my-super-secret-jwt-key-for-smart-meeting-room-2025
+  expiration: 600000
+
 logging:
   level:
     org.hibernate.SQL: debug
-
-# ✅ Add this section at the bottom
-jwt:
-  secret: my-super-secret-jwt-key-for-smart-meeting-room-2025
-  expiration: 86400000 # 1 day (in milliseconds)
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    com.project.smartmeetingroom: DEBUG
