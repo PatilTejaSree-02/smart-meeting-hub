@@ -1,38 +1,48 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
-// USER LAYOUT + PAGES
-import Dashboard from "./pages/Dashboard";
-import Rooms from "./pages/Rooms";
-import RoomDetails from "./pages/RoomDetails";
-import MyBookings from "./pages/MyBookings";
-import UserLayout from "./components/layout/UserLayout";
+import Index from "@/pages/Index";
+import Dashboard from "@/pages/Dashboard";
+import Rooms from "@/pages/Rooms";
+import RoomDetails from "@/pages/RoomDetails";
+import MyBookings from "@/pages/MyBookings";
 
-// ADMIN PAGES
-import AdminRooms from "./pages/admin/AdminRooms";
-import AdminUsers from "./pages/admin/AdminUsers";
+import AdminRooms from "@/pages/admin/AdminRooms";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminBookings from "@/pages/admin/AdminBookings";
+import AdminAnalytics from "@/pages/admin/AdminAnalytics";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import UserLayout from "@/components/layout/UserLayout";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <Routes>
+      {/* PUBLIC */}
+      <Route path="/" element={<Index />} />
 
-        {/* USER AREA */}
+      {/* USER */}
+      <Route element={<ProtectedRoute />}>
         <Route element={<UserLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/rooms" element={<Rooms />} />
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/bookings" element={<MyBookings />} />
         </Route>
+      </Route>
 
-        {/* ADMIN AREA */}
-        <Route path="/admin/rooms" element={<AdminRooms />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
+      {/* ADMIN */}
+      <Route element={<ProtectedRoute adminOnly />}>
+  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+  <Route path="/admin/bookings" element={<AdminBookings />} />
+  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+  <Route path="/admin/rooms" element={<AdminRooms />} />
+  <Route path="/admin/users" element={<AdminUsers />} />
+</Route>
 
-        {/* FALLBACK */}
-        <Route path="*" element={<p>Page Not Found</p>} />
 
-      </Routes>
-    </BrowserRouter>
+      {/* FALLBACK */}
+      <Route path="*" element={<p>Not Found</p>} />
+    </Routes>
   );
 }

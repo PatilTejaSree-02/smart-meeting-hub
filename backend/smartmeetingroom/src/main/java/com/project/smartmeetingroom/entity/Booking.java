@@ -1,6 +1,7 @@
 package com.project.smartmeetingroom.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import jakarta.persistence.*;
 
@@ -12,28 +13,41 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
+
     @Column(name = "room_id", nullable = false)
     private Long roomId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    @Column(nullable = false)
+    private String title;
+
+    @Column(name = "booking_date", nullable = false)
+    private LocalDate bookingDate;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
     @Column(nullable = false)
-    private LocalDateTime startTime;
+    private Integer attendees = 1;
 
     @Column(nullable = false)
-    private LocalDateTime endTime;
+    private String status;
 
-    @Column(nullable = false)
-    private String status; // CONFIRMED, CANCELLED
-
-    public Booking() {}
+    /* ================= GETTERS ================= */
 
     public Long getId() {
         return id;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
     }
 
     public Long getRoomId() {
@@ -44,24 +58,34 @@ public class Booking {
         return userId;
     }
 
-    public Long getTenantId() {
-        return tenantId;
+    public String getTitle() {
+        return title;
     }
 
-    public LocalDateTime getStartTime() {
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
+
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public LocalDateTime getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
+    }
+
+    public Integer getAttendees() {
+        return attendees;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    /* ================= SETTERS ================= */
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 
     public void setRoomId(Long roomId) {
@@ -72,16 +96,24 @@ public class Booking {
         this.userId = userId;
     }
 
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setBookingDate(LocalDate bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
+    public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public void setAttendees(Integer attendees) {
+        this.attendees = attendees;
     }
 
     public void setStatus(String status) {

@@ -25,8 +25,7 @@ public class AdminUserService {
     }
 
     public User createUser(CreateUserRequest request) {
-
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmailAndTenantId(request.getEmail(), request.getTenantId())) {
             throw new RuntimeException("Email already exists");
         }
 
@@ -35,7 +34,7 @@ public class AdminUserService {
         user.setPasswordHash(encoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setTenantId(request.getTenantId());
-        user.setActive(true);
+        user.setStatus(User.Status.active);
 
         return userRepository.save(user);
     }
@@ -49,9 +48,7 @@ public class AdminUserService {
             user.setRole(request.getRole());
         }
 
-        if (request.getActive() != null) {
-            user.setActive(request.getActive());
-        }
+
 
         return userRepository.save(user);
     }
@@ -61,7 +58,7 @@ public class AdminUserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setActive(false);
+        user.setStatus(User.Status.inactive);
         userRepository.save(user);
     }
 }

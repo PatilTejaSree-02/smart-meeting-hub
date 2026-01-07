@@ -1,54 +1,43 @@
 package com.project.smartmeetingroom.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class CreateBookingRequest {
 
+    private Long tenantId;
     private Long roomId;
     private Long userId;
-    private Long tenantId;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
 
-    public CreateBookingRequest() {}
+    private String title;
+    private LocalDate bookingDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private Integer attendees;
 
-    public Long getRoomId() {
-        return roomId;
-    }
+    /* getters & setters */
 
-    public Long getUserId() {
-        return userId;
-    }
+    public Long getTenantId() { return tenantId; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
 
-    public Long getTenantId() {
-        return tenantId;
-    }
+    public Long getRoomId() { return roomId; }
+    public void setRoomId(Long roomId) { this.roomId = roomId; }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public void setRoomId(Long roomId) {
-        this.roomId = roomId;
-    }
+    public LocalDate getBookingDate() { return bookingDate; }
+    public void setBookingDate(LocalDate bookingDate) { this.bookingDate = bookingDate; }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+    public LocalTime getStartTime() { return startTime; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
-    }
+    public LocalTime getEndTime() { return endTime; }
+    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
+    public Integer getAttendees() { return attendees; }
+    public void setAttendees(Integer attendees) { this.attendees = attendees; }
 }

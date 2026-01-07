@@ -1,19 +1,23 @@
 package com.project.smartmeetingroom.security;
 
+import java.security.Key;
 import java.util.Date;
-import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
 
-    private static final String SECRET = "SUPER_SECURE_ENTERPRISE_SECRET";
-    private static final long EXPIRATION = 1000 * 60 * 60 * 24; // 24 hours
+    // ✅ Guaranteed 256-bit secure key
+    private static final Key SIGNING_KEY =
+            Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
+    private static final long EXPIRATION = 1000 * 60 * 60; // 1 hour
 
     public String generateToken(
             Long userId,
@@ -23,20 +27,19 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .setSubject(email)
-                .addClaims(Map.of(
-                        "userId", userId,
-                        "role", role,
-                        "tenantId", tenantId
-                ))
+                .claim("userId", userId)
+                .claim("role", role)
+                .claim("tenantId", tenantId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
-                .signWith(SignatureAlgorithm.HS256, SECRET)
+                .signWith(SIGNING_KEY)
                 .compact();
     }
 
     public Claims extractClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(SECRET)
+        return Jwts.parserBuilder()
+                .setSigningKey(SIGNING_KEY)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

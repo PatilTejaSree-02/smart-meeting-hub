@@ -1,27 +1,20 @@
 package com.project.smartmeetingroom.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class RescheduleBookingRequest {
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    private LocalDate bookingDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
-    public RescheduleBookingRequest() {}
+    public LocalDate getBookingDate() { return bookingDate; }
+    public void setBookingDate(LocalDate bookingDate) { this.bookingDate = bookingDate; }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
-    }
+    public LocalTime getStartTime() { return startTime; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
+    public LocalTime getEndTime() { return endTime; }
+    public void setEndTime(LocalTime endTime) { this.endTime = endTime; }
 }

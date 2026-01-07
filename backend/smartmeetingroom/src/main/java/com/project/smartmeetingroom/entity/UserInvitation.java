@@ -1,6 +1,6 @@
 package com.project.smartmeetingroom.entity;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
@@ -12,32 +12,49 @@ public class UserInvitation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    private Tenant tenant;
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
 
+    @Column(nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String role;
+
+    @Column(nullable = false)
     private String token;
+
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
+
+    @Column(nullable = false)
     private String status;
-    private Instant expiresAt;
+
+    /* ===== GETTERS & SETTERS ===== */
 
     public Long getId() { return id; }
 
-    public Tenant getTenant() { return tenant; }
-    public void setTenant(Tenant tenant) { this.tenant = tenant; }
+    public Long getTenantId() { return tenantId; }
 
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
 
     public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
 
     public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+
+    public LocalDateTime getExpiresAt() { return expiresAt; }
 
     public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 
-    public Instant getExpiresAt() { return expiresAt; }
-    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+
+    public void setEmail(String email) { this.email = email; }
+
+    public void setRole(String role) { this.role = role; }
+
+    public void setToken(String token) { this.token = token; }
+
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+
+    public void setStatus(String status) { this.status = status; }
 }

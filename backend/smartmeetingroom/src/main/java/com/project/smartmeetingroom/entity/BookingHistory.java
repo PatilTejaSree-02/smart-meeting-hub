@@ -1,6 +1,6 @@
 package com.project.smartmeetingroom.entity;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
@@ -12,24 +12,30 @@ public class BookingHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    private Booking booking;
+    @Column(name = "booking_id", nullable = false)
+    private Long bookingId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
+    @Column(nullable = false)
     private String action;
 
-    private Instant createdAt = Instant.now();
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    /* ===== GETTERS & SETTERS ===== */
 
     public Long getId() { return id; }
 
-    public Booking getBooking() { return booking; }
-    public void setBooking(Booking booking) { this.booking = booking; }
+    public Long getBookingId() { return bookingId; }
 
     public String getAction() { return action; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public void setId(Long id) { this.id = id; }
+
+    public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
+
     public void setAction(String action) { this.action = action; }
 
-    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

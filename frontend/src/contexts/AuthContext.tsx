@@ -1,70 +1,69 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import api from "@/api/api";
-import { toast } from "@/components/ui/use-toast";
+import { createContext, useContext, useEffect, useState } from "react";
+import { login as loginApi } from "@/api/api";
 
-interface User {
-  id: number;
+type User = {
+  userId: number;
   email: string;
   role: string;
-  tenantId: number | null;
-}
+  tenantId: number;
+};
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<User>;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-}
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState<string | null>(null);
 
-  /* ---------------- RESTORE SESSION ---------------- */
   useEffect(() => {
+    const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
 
-    if (storedUser) {
+    if (storedToken && storedUser) {
+      setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
-
-    setLoading(false);
   }, []);
 
-  /* ---------------- LOGIN ---------------- */
-  const login = async (email: string, password: string): Promise<User> => {
-    const res = await api.post("/api/auth/login", { email, password });
+  const login = async (email: string, password: string) => {
+    const res = await loginApi(email, password);
 
-    const userData: User = {
-      id: res.data.id,
-      email: res.data.email,
-      role: res.data.role,
-      tenantId: res.data.tenantId,
-    };
+    if (!res.token) {
+    throw new Error("Invalid login response");
+    }
 
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("user", JSON.stringify(userData));
-
-    setUser(userData);
-
-    toast({
-      title: "Login successful",
-      description: `Welcome ${email}`,
+    setToken(res.token);
+    setUser({
+      userId: res.userId,
+      email: res.email,
+      role: res.role,
+      tenantId: res.tenantId,
     });
 
-    return userData;
+    localStorage.setItem("token", res.token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        userId: res.userId,
+        email: res.email,
+        role: res.role,
+        tenantId: res.tenantId,
+      })
+    );
   };
 
-  /* ---------------- LOGOUT ---------------- */
   const logout = () => {
-    localStorage.clear();
     setUser(null);
-
-    toast({ title: "Logged out" });
-
+    setToken(null);
+    localStorage.clear();
     window.location.href = "/";
   };
 
@@ -72,10 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        loading,
-        isAuthenticated: !!user,
+        token,
         login,
         logout,
+        isAuthenticated: !!token,
+        isAdmin: user?.role === "ROLE_ADMIN",
       }}
     >
       {children}

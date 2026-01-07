@@ -16,12 +16,21 @@ public class RoomService {
         this.roomRepository = roomRepository;
     }
 
-    public List<Room> getAllRooms(Long tenantId) {
-        return roomRepository.findByTenantIdAndActiveTrue(tenantId);
+    // ---------------- LIST ROOMS ----------------
+    public List<Room> getActiveRooms(Long tenantId) {
+        return roomRepository.findByTenantIdAndIsActiveTrue(tenantId);
     }
 
-    public Room getRoomById(Long id) {
-        return roomRepository.findById(id)
+    // ---------------- ROOM DETAILS ----------------
+    public Room getRoom(Long roomId, Long tenantId) {
+
+        Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Room not found"));
+
+        if (!room.getTenantId().equals(tenantId)) {
+            throw new RuntimeException("Unauthorized access");
+        }
+
+        return room;
     }
 }

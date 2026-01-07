@@ -1,7 +1,8 @@
 package com.project.smartmeetingroom.entity;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "tenants")
@@ -52,31 +53,40 @@ public class Tenant {
         updatedAt = LocalDateTime.now();
     }
 
-    // ===== Getters & Setters =====
+    /* ===== GETTERS & SETTERS ===== */
 
     public Long getId() { return id; }
+
     public String getCompanyName() { return companyName; }
-    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
     public String getSubdomain() { return subdomain; }
-    public void setSubdomain(String subdomain) { this.subdomain = subdomain; }
 
     public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 
     public String getCompanyEmail() { return companyEmail; }
-    public void setCompanyEmail(String companyEmail) { this.companyEmail = companyEmail; }
 
     public String getPlanType() { return planType; }
-    public void setPlanType(String planType) { this.planType = planType; }
 
     public Integer getMaxUsers() { return maxUsers; }
-    public void setMaxUsers(Integer maxUsers) { this.maxUsers = maxUsers; }
 
     public Integer getMaxRooms() { return maxRooms; }
-    public void setMaxRooms(Integer maxRooms) { this.maxRooms = maxRooms; }
 
     public Integer getMaxBookingsPerMonth() { return maxBookingsPerMonth; }
+
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+
+    public void setSubdomain(String subdomain) { this.subdomain = subdomain; }
+
+    public void setStatus(String status) { this.status = status; }
+
+    public void setCompanyEmail(String companyEmail) { this.companyEmail = companyEmail; }
+
+    public void setPlanType(String planType) { this.planType = planType; }
+
+    public void setMaxUsers(Integer maxUsers) { this.maxUsers = maxUsers; }
+
+    public void setMaxRooms(Integer maxRooms) { this.maxRooms = maxRooms; }
+
     public void setMaxBookingsPerMonth(Integer maxBookingsPerMonth) {
         this.maxBookingsPerMonth = maxBookingsPerMonth;
     }

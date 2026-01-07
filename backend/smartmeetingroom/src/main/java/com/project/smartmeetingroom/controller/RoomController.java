@@ -5,27 +5,30 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 import com.project.smartmeetingroom.entity.Room;
-import com.project.smartmeetingroom.service.RoomService;
+import com.project.smartmeetingroom.repository.RoomRepository;
+import com.project.smartmeetingroom.security.JwtContextUtil;
 
 @RestController
 @RequestMapping("/api/rooms")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:8081")
 public class RoomController {
 
-    private final RoomService roomService;
+    private final RoomRepository roomRepo;
+    private final JwtContextUtil jwt;
 
-    public RoomController(RoomService roomService) {
-        this.roomService = roomService;
+    public RoomController(RoomRepository roomRepo, JwtContextUtil jwt) {
+        this.roomRepo = roomRepo;
+        this.jwt = jwt;
     }
 
-    // TEMP: tenantId passed explicitly (NO AUTH, NO MOCK)
     @GetMapping
-    public List<Room> getRooms(@RequestParam Long tenantId) {
-        return roomService.getAllRooms(tenantId);
+    public List<Room> rooms() {
+        return roomRepo.findByTenantIdAndIsActiveTrue(jwt.getTenantId());
     }
 
     @GetMapping("/{id}")
-    public Room getRoomById(@PathVariable Long id) {
-        return roomService.getRoomById(id);
+    public Room room(@PathVariable Long id) {
+        return roomRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
     }
 }

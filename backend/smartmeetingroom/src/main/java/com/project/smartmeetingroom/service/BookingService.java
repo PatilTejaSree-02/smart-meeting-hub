@@ -18,39 +18,47 @@ public class BookingService {
         this.bookingRepository = bookingRepository;
     }
 
-    // CREATE
+    /* ================= CREATE ================= */
+
     public Booking createBooking(CreateBookingRequest request) {
 
         boolean conflict =
-                bookingRepository.existsByRoomIdAndTenantIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
-                        request.getRoomId(),
-                        request.getTenantId(),
-                        "CONFIRMED",
-                        request.getEndTime(),
-                        request.getStartTime()
-                );
+                bookingRepository
+                        .existsByRoomIdAndTenantIdAndBookingDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                                request.getRoomId(),
+                                request.getTenantId(),
+                                request.getBookingDate(),
+                                "confirmed",
+                                request.getEndTime(),
+                                request.getStartTime()
+                        );
 
         if (conflict) {
-            throw new RuntimeException("Room already booked for this time");
+            throw new RuntimeException("Room already booked for this time slot");
         }
 
         Booking booking = new Booking();
+        booking.setTenantId(request.getTenantId());
         booking.setRoomId(request.getRoomId());
         booking.setUserId(request.getUserId());
-        booking.setTenantId(request.getTenantId());
+        booking.setTitle(request.getTitle());
+        booking.setBookingDate(request.getBookingDate());
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
-        booking.setStatus("CONFIRMED");
+        booking.setAttendees(request.getAttendees());
+        booking.setStatus("confirmed");
 
         return bookingRepository.save(booking);
     }
 
-    // LIST
-    public List<Booking> getBookingsForUser(Long userId, Long tenantId) {
+    /* ================= USER BOOKINGS ================= */
+
+    public List<Booking> getUserBookings(Long userId, Long tenantId) {
         return bookingRepository.findByUserIdAndTenantId(userId, tenantId);
     }
 
-    // RESCHEDULE
+    /* ================= RESCHEDULE ================= */
+
     public Booking rescheduleBooking(
             Long bookingId,
             Long tenantId,
@@ -64,31 +72,34 @@ public class BookingService {
             throw new RuntimeException("Unauthorized booking access");
         }
 
-        if (!"CONFIRMED".equals(booking.getStatus())) {
+        if (!"confirmed".equals(booking.getStatus())) {
             throw new RuntimeException("Only confirmed bookings can be rescheduled");
         }
 
         boolean conflict =
-                bookingRepository.existsByRoomIdAndTenantIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                        booking.getRoomId(),
-                        tenantId,
-                        "CONFIRMED",
-                        request.getEndTime(),
-                        request.getStartTime(),
-                        booking.getId()
-                );
+                bookingRepository
+                        .existsByRoomIdAndTenantIdAndBookingDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                                booking.getRoomId(),
+                                tenantId,
+                                request.getBookingDate(),
+                                "confirmed",
+                                request.getEndTime(),
+                                request.getStartTime()
+                        );
 
         if (conflict) {
             throw new RuntimeException("Room already booked for the new time slot");
         }
 
+        booking.setBookingDate(request.getBookingDate());
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
 
         return bookingRepository.save(booking);
     }
 
-    // CANCEL
+    /* ================= CANCEL ================= */
+
     public void cancelBooking(Long bookingId, Long tenantId) {
 
         Booking booking = bookingRepository.findById(bookingId)
@@ -98,7 +109,7 @@ public class BookingService {
             throw new RuntimeException("Unauthorized booking access");
         }
 
-        booking.setStatus("CANCELLED");
+        booking.setStatus("cancelled");
         bookingRepository.save(booking);
     }
 }

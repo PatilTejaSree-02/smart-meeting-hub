@@ -34,23 +34,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        // ✅ ABSOLUTE BYPASS FOR AUTH & PREFLIGHT
         if (path.startsWith("/api/auth") ||
             "OPTIONS".equalsIgnoreCase(request.getMethod())) {
-
-            chain.doFilter(request, response);
-            return;
-        }
-
-        // If already authenticated, skip
-        if (SecurityContextHolder.getContext().getAuthentication() != null) {
             chain.doFilter(request, response);
             return;
         }
 
         String header = request.getHeader("Authorization");
 
-        // 🚫 NO TOKEN → JUST CONTINUE (DO NOT BLOCK)
         if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
@@ -58,13 +49,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
 
-        // 🚫 INVALID TOKEN → CONTINUE (DO NOT BLOCK)
         if (!jwtUtil.isTokenValid(token)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // ✅ VALID TOKEN → AUTHENTICATE
         Claims claims = jwtUtil.extractClaims(token);
 
         String email = claims.getSubject();
@@ -81,10 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 new WebAuthenticationDetailsSource().buildDetails(request)
         );
 
-        SecurityContextHolder
-                .getContext()
-                .setAuthentication(authentication);
-
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(request, response);
     }
 }

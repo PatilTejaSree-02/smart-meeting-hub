@@ -5,45 +5,33 @@ import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
 import com.project.smartmeetingroom.dto.CreateUserRequest;
-import com.project.smartmeetingroom.dto.UpdateUserRequest;
 import com.project.smartmeetingroom.entity.User;
+import com.project.smartmeetingroom.security.JwtContextUtil;
 import com.project.smartmeetingroom.service.AdminUserService;
 
 @RestController
 @RequestMapping("/api/admin/users")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:8081")
 public class AdminUserController {
 
-    private final AdminUserService adminUserService;
+    private final AdminUserService userService;
+    private final JwtContextUtil jwt;
 
-    public AdminUserController(AdminUserService adminUserService) {
-        this.adminUserService = adminUserService;
+    public AdminUserController(
+            AdminUserService userService,
+            JwtContextUtil jwt) {
+        this.userService = userService;
+        this.jwt = jwt;
     }
 
-    // LIST USERS
     @GetMapping
-    public List<User> getUsers(@RequestParam Long tenantId) {
-        return adminUserService.getUsers(tenantId);
+    public List<User> users() {
+        return userService.getUsers(jwt.getTenantId());
     }
 
-    // CREATE USER
     @PostMapping
-    public User createUser(@RequestBody CreateUserRequest request) {
-        return adminUserService.createUser(request);
-    }
-
-    // UPDATE USER
-    @PutMapping("/{id}")
-    public User updateUser(
-            @PathVariable Long id,
-            @RequestBody UpdateUserRequest request
-    ) {
-        return adminUserService.updateUser(id, request);
-    }
-
-    // DEACTIVATE USER
-    @DeleteMapping("/{id}")
-    public void deactivateUser(@PathVariable Long id) {
-        adminUserService.deactivateUser(id);
+    public User create(@RequestBody CreateUserRequest req) {
+        req.setTenantId(jwt.getTenantId());
+        return userService.createUser(req);
     }
 }

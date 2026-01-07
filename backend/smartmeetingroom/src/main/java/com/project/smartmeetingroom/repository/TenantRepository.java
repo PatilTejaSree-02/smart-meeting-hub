@@ -10,5 +10,4 @@ public interface TenantRepository extends JpaRepository<Tenant, Long> {
 
     Optional<Tenant> findBySubdomain(String subdomain);
 
-    Optional<Tenant> findByCompanyEmail(String companyEmail);
 }

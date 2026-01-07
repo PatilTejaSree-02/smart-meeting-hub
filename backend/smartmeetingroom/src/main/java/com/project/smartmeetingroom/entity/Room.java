@@ -10,67 +10,63 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id", nullable = false)
+    private Long tenantId;
+
     @Column(nullable = false)
     private String name;
 
-    private String location;
+    private String description;
 
     @Column(nullable = false)
     private Integer capacity;
 
     @Column(nullable = false)
-    private Boolean active = true;
+    private Integer floor;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    private String building;
 
-    public Room() {}
+    @Column(name = "image_url")
+    private String imageUrl;
 
-    public Long getId() {
-        return id;
-    }
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
-    public String getName() {
-        return name;
-    }
+    /* ===== GETTERS & SETTERS ===== */
 
-    public String getLocation() {
-        return location;
-    }
+    public Long getId() { return id; }
 
-    public Integer getCapacity() {
-        return capacity;
-    }
+    public Long getTenantId() { return tenantId; }
 
-    public Boolean getActive() {
-        return active;
-    }
+    public String getName() { return name; }
 
-    public Long getTenantId() {
-        return tenantId;
-    }
+    public String getDescription() { return description; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Integer getCapacity() { return capacity; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public Integer getFloor() { return floor; }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
+    public String getBuilding() { return building; }
 
-    public void setCapacity(Integer capacity) {
-        this.capacity = capacity;
-    }
+    public String getImageUrl() { return imageUrl; }
 
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
+    public Boolean getIsActive() { return isActive; }
 
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
-    }
+    public void setId(Long id) { this.id = id; }
+
+    public void setTenantId(Long tenantId) { this.tenantId = tenantId; }
+
+    public void setName(String name) { this.name = name; }
+
+    public void setDescription(String description) { this.description = description; }
+
+    public void setCapacity(Integer capacity) { this.capacity = capacity; }
+
+    public void setFloor(Integer floor) { this.floor = floor; }
+
+    public void setBuilding(String building) { this.building = building; }
+
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }
