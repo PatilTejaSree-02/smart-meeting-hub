@@ -12,12 +12,6 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-    // ORIGINAL METHOD (causes the issue - searches for NULL tenant)
-    // Optional<User> findByEmailAndTenantId(String email, Integer tenantId);
-    
-    // NEW METHOD - Search by email only (no tenant filter)
-    // This will find the user regardless of their tenant_id
-    Optional<User> findByEmail(String email);
     
     // If you need tenant-specific search, keep this too
     Optional<User> findByEmailAndTenantId(String email, Long tenantId);

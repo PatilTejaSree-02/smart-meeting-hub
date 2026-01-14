@@ -1,9 +1,8 @@
-export interface Room {
+export type Room = {
   id: number;
   name: string;
-  location: string;
   capacity: number;
-  active: boolean;
-  tenantId: number;
-}
-
+  floor: number;
+  building: string;
+  isActive: boolean;
+};

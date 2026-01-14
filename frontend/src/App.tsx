@@ -14,14 +14,16 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import UserLayout from "@/components/layout/UserLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 export default function App() {
   return (
     <Routes>
+
       {/* PUBLIC */}
       <Route path="/" element={<Index />} />
 
-      {/* USER */}
+      {/* USER AREA */}
       <Route element={<ProtectedRoute />}>
         <Route element={<UserLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -31,18 +33,20 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ADMIN */}
+      {/* ADMIN AREA */}
       <Route element={<ProtectedRoute adminOnly />}>
-  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-  <Route path="/admin/bookings" element={<AdminBookings />} />
-  <Route path="/admin/analytics" element={<AdminAnalytics />} />
-  <Route path="/admin/rooms" element={<AdminRooms />} />
-  <Route path="/admin/users" element={<AdminUsers />} />
-</Route>
-
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/bookings" element={<AdminBookings />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/rooms" element={<AdminRooms />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+        </Route>
+      </Route>
 
       {/* FALLBACK */}
       <Route path="*" element={<p>Not Found</p>} />
+
     </Routes>
   );
 }

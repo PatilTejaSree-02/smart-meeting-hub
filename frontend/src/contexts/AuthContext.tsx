@@ -15,6 +15,7 @@ type AuthContextType = {
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  loading: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -31,33 +33,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
     const res = await loginApi(email, password);
 
     if (!res.token) {
-    throw new Error("Invalid login response");
+      throw new Error("Invalid login response");
     }
 
-    setToken(res.token);
-    setUser({
+    const userData = {
       userId: res.userId,
       email: res.email,
       role: res.role,
       tenantId: res.tenantId,
-    });
+    };
+
+    setToken(res.token);
+    setUser(userData);
 
     localStorage.setItem("token", res.token);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        userId: res.userId,
-        email: res.email,
-        role: res.role,
-        tenantId: res.tenantId,
-      })
-    );
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
@@ -74,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         login,
         logout,
+        loading,
         isAuthenticated: !!token,
         isAdmin: user?.role === "ROLE_ADMIN",
       }}

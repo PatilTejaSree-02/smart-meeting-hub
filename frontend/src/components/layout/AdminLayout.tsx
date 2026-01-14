@@ -1,32 +1,19 @@
-import { Outlet, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Sidebar } from "./Sidebar";
-import { Header } from "./Header";
+import { Link, Outlet } from "react-router-dom";
 
-export function AdminLayout() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  if (!user || user.role !== "ROLE_ADMIN") {
-    return <Navigate to="/dashboard" replace />;
-  }
-
+export default function AdminLayout() {
   return (
-    <div className="flex min-h-screen w-full">
-      <Sidebar />
-      <div className="flex flex-1 flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
-          <Outlet />
-        </main>
-      </div>
+    <div className="min-h-screen">
+      <nav className="bg-gray-900 text-white px-6 py-4 flex gap-6">
+        <Link to="/admin/dashboard">Admin Dashboard</Link>
+        <Link to="/admin/rooms">Rooms</Link>
+        <Link to="/admin/bookings">Bookings</Link>
+        <Link to="/admin/users">Users</Link>
+        <Link to="/admin/analytics">Analytics</Link>
+      </nav>
+
+      <main className="p-6">
+        <Outlet />
+      </main>
     </div>
   );
 }

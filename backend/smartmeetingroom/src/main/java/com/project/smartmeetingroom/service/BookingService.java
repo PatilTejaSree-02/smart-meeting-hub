@@ -22,16 +22,14 @@ public class BookingService {
 
     public Booking createBooking(CreateBookingRequest request) {
 
-        boolean conflict =
-                bookingRepository
-                        .existsByRoomIdAndTenantIdAndBookingDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
-                                request.getRoomId(),
-                                request.getTenantId(),
-                                request.getBookingDate(),
-                                "confirmed",
-                                request.getEndTime(),
-                                request.getStartTime()
-                        );
+        // Check for overlapping bookings
+        boolean conflict = bookingRepository.hasConflict(
+                request.getRoomId(),
+                request.getTenantId(),
+                request.getBookingDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
 
         if (conflict) {
             throw new RuntimeException("Room already booked for this time slot");
@@ -76,16 +74,13 @@ public class BookingService {
             throw new RuntimeException("Only confirmed bookings can be rescheduled");
         }
 
-        boolean conflict =
-                bookingRepository
-                        .existsByRoomIdAndTenantIdAndBookingDateAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
-                                booking.getRoomId(),
-                                tenantId,
-                                request.getBookingDate(),
-                                "confirmed",
-                                request.getEndTime(),
-                                request.getStartTime()
-                        );
+        boolean conflict = bookingRepository.hasConflict(
+                booking.getRoomId(),
+                tenantId,
+                request.getBookingDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
 
         if (conflict) {
             throw new RuntimeException("Room already booked for the new time slot");

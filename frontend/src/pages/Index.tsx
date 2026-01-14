@@ -13,7 +13,15 @@ export default function Index() {
   const handleLogin = async () => {
     try {
       await login(email, password);
-      navigate("/dashboard"); // ✅ CORRECT
+
+const user = JSON.parse(localStorage.getItem("user")!);
+
+if (user.role === "ROLE_ADMIN") {
+  navigate("/admin/dashboard");
+} else {
+  navigate("/dashboard");
+}
+
     } catch {
       setError("Invalid credentials");
     }
