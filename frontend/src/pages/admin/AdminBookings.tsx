@@ -6,6 +6,8 @@ import {
   Calendar,
   X,
   AlertCircle,
+  Plus,
+  Pencil,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -29,12 +31,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import api from "@/api/api";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +55,17 @@ interface Booking {
   bookingDate: string;
   startTime: string;
   endTime: string;
+  attendees: number;
   status: string;
+}
+
+interface Room {
+  id: number;
+  name: string;
+  capacity: number;
+  floor: number;
+  building: string;
+  isActive: boolean;
 }
 
 /* ---------------- COMPONENT ---------------- */
@@ -59,87 +74,84 @@ export default function AdminBookings() {
   const { toast } = useToast();
 
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [filterDate, setFilterDate] = useState<Date | undefined>();
+
+  // Cancel dialog
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [cancellationReason, setCancellationReason] = useState("");
 
-  /* ---------------- FETCH BOOKINGS ---------------- */
+  // Create Booking dialog
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newRoomId, setNewRoomId] = useState<number | null>(null);
+  const [newBookingDate, setNewBookingDate] = useState<Date | undefined>();
+  const [newStartTime, setNewStartTime] = useState("09:00");
+  const [newEndTime, setNewEndTime] = useState("10:00");
+  const [newAttendees, setNewAttendees] = useState(1);
+
+  // Reschedule dialog
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>();
+  const [rescheduleStart, setRescheduleStart] = useState("09:00");
+  const [rescheduleEnd, setRescheduleEnd] = useState("10:00");
+
+  /* ---------------- FETCH DATA ---------------- */
+
+  const fetchRooms = async () => {
+    const res = await api.get("/admin/rooms");
+    setRooms(res.data);
+  };
+
+  const fetchBookings = async () => {
+    const res = await api.get("/admin/bookings");
+    setBookings(res.data);
+  };
+
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([fetchRooms(), fetchBookings()]);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load bookings/rooms",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/api/bookings/admin");
-        setBookings(res.data);
-      } catch (err) {
-        toast({
-          title: "Error",
-          description: "Failed to load bookings",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [toast]);
+    loadAll();
+  }, []);
 
   /* ---------------- FILTERING ---------------- */
 
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
+      const roomName = rooms.find((r) => r.id === b.roomId)?.name || "";
+
       const matchesSearch =
         b.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(b.roomId).includes(searchQuery) ||
-        String(b.userId).includes(searchQuery);
+        roomName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(b.userId).includes(searchQuery) ||
+        String(b.roomId).includes(searchQuery);
 
       const matchesDate =
-        !filterDate ||
-        b.bookingDate === format(filterDate, "yyyy-MM-dd");
+        !filterDate || b.bookingDate === format(filterDate, "yyyy-MM-dd");
 
       return matchesSearch && matchesDate;
     });
-  }, [bookings, searchQuery, filterDate]);
+  }, [bookings, searchQuery, filterDate, rooms]);
 
-  /* ---------------- ACTIONS ---------------- */
-
-  const openCancelDialog = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setCancelDialogOpen(true);
-  };
-
-  const handleCancelBooking = () => {
-    if (!selectedBooking || !cancellationReason.trim()) {
-      toast({
-        title: "Reason Required",
-        description: "Please provide a cancellation reason.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === selectedBooking.id
-          ? { ...b, status: "cancelled" }
-          : b
-      )
-    );
-
-    toast({
-      title: "Booking Cancelled",
-      description: `Booking "${selectedBooking.title}" cancelled.`,
-    });
-
-    setCancelDialogOpen(false);
-    setSelectedBooking(null);
-    setCancellationReason("");
-  };
+  /* ---------------- HELPERS ---------------- */
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -152,6 +164,177 @@ export default function AdminBookings() {
       cancelled: "bg-destructive/10 text-destructive border-destructive/20",
     };
     return variants[status] || "";
+  };
+
+  const getRoomLabel = (roomId: number) => {
+    const r = rooms.find((x) => x.id === roomId);
+    if (!r) return `Room #${roomId}`;
+    return `${r.name} (Cap ${r.capacity})`;
+  };
+
+  /* ---------------- CANCEL ---------------- */
+
+  const openCancelDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setCancellationReason("");
+    setCancelDialogOpen(true);
+  };
+
+  const handleCancelBooking = async () => {
+    if (!selectedBooking) return;
+
+    if (!cancellationReason.trim()) {
+      toast({
+        title: "Reason Required",
+        description: "Please provide a cancellation reason.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await api.delete(`/admin/bookings/${selectedBooking.id}`);
+
+      toast({
+        title: "Booking Cancelled ✅",
+        description: `"${selectedBooking.title}" cancelled successfully`,
+      });
+
+      setCancelDialogOpen(false);
+      setSelectedBooking(null);
+      await fetchBookings();
+    } catch (err: any) {
+      toast({
+        title: "Cancel failed ❌",
+        description: err?.response?.data?.message || "Could not cancel booking",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /* ---------------- CREATE ---------------- */
+
+  const handleCreateBooking = async () => {
+    if (!newTitle.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter booking title",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newRoomId) {
+      toast({
+        title: "Room required",
+        description: "Please select a room",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newBookingDate) {
+      toast({
+        title: "Date required",
+        description: "Please select booking date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const room = rooms.find((r) => r.id === newRoomId);
+    if (room && newAttendees > room.capacity) {
+      toast({
+        title: "Too many attendees ❌",
+        description: `Max capacity of ${room.name} is ${room.capacity}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await api.post("/admin/bookings", {
+        title: newTitle,
+        roomId: newRoomId,
+        bookingDate: format(newBookingDate, "yyyy-MM-dd"),
+        startTime: newStartTime,
+        endTime: newEndTime,
+        attendees: newAttendees,
+      });
+
+      toast({
+        title: "Booking Created ✅",
+        description: "New booking added successfully",
+      });
+
+      setCreateDialogOpen(false);
+      setNewTitle("");
+      setNewRoomId(null);
+      setNewAttendees(1);
+      setNewBookingDate(undefined);
+      setNewStartTime("09:00");
+      setNewEndTime("10:00");
+
+      await fetchBookings();
+    } catch (err: any) {
+      toast({
+        title: "Create failed ❌",
+        description:
+          err?.response?.data?.message ||
+          "Slot already booked / backend error",
+        variant: "destructive",
+      });
+    }
+  };
+
+  /* ---------------- RESCHEDULE ---------------- */
+
+  const openRescheduleDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setRescheduleDialogOpen(true);
+
+    setRescheduleDate(new Date(booking.bookingDate));
+    setRescheduleStart(booking.startTime);
+    setRescheduleEnd(booking.endTime);
+  };
+
+  const handleReschedule = async () => {
+    if (!selectedBooking) return;
+
+    if (!rescheduleDate) {
+      toast({
+        title: "Date required",
+        description: "Please select new booking date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // ✅ FIXED ENDPOINT (matches backend @PutMapping("/{id}"))
+      await api.put(`/admin/bookings/${selectedBooking.id}`, {
+        bookingDate: format(rescheduleDate, "yyyy-MM-dd"),
+        startTime: rescheduleStart,
+        endTime: rescheduleEnd,
+      });
+
+      toast({
+        title: "Rescheduled ✅",
+        description: `Booking updated successfully`,
+      });
+
+      setRescheduleDialogOpen(false);
+      setSelectedBooking(null);
+      await fetchBookings();
+    } catch (err: any) {
+      toast({
+        title: "Reschedule failed ❌",
+        description:
+          err?.response?.data?.message ||
+          "New slot already booked / backend error",
+        variant: "destructive",
+      });
+    }
   };
 
   /* ---------------- LOADING ---------------- */
@@ -169,13 +352,20 @@ export default function AdminBookings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-heading text-2xl lg:text-3xl font-bold">
-          All Bookings
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          View and manage all room bookings.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-2xl lg:text-3xl font-bold">
+            All Bookings
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Admin can view, book, reschedule and cancel bookings.
+          </p>
+        </div>
+
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Booking
+        </Button>
       </div>
 
       {/* Filters */}
@@ -189,7 +379,7 @@ export default function AdminBookings() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by title, roomId, userId..."
+              placeholder="Search by title, room name, userId..."
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -206,9 +396,7 @@ export default function AdminBookings() {
                 )}
               >
                 <Calendar className="mr-2 h-4 w-4" />
-                {filterDate
-                  ? format(filterDate, "PP")
-                  : "Filter by date"}
+                {filterDate ? format(filterDate, "PP") : "Filter by date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -246,7 +434,7 @@ export default function AdminBookings() {
             {filteredBookings.map((b) => (
               <TableRow key={b.id}>
                 <TableCell>{b.title}</TableCell>
-                <TableCell>Room #{b.roomId}</TableCell>
+                <TableCell>{getRoomLabel(b.roomId)}</TableCell>
                 <TableCell>User #{b.userId}</TableCell>
                 <TableCell>
                   {format(new Date(b.bookingDate), "MMM d, yyyy")} <br />
@@ -254,6 +442,7 @@ export default function AdminBookings() {
                     {b.startTime} – {b.endTime}
                   </span>
                 </TableCell>
+
                 <TableCell>
                   <Badge
                     variant="outline"
@@ -262,16 +451,28 @@ export default function AdminBookings() {
                     {b.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
+
+                <TableCell className="text-right space-x-2">
                   {b.status !== "cancelled" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive"
-                      onClick={() => openCancelDialog(b)}
-                    >
-                      Cancel
-                    </Button>
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openRescheduleDialog(b)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Reschedule
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() => openCancelDialog(b)}
+                      >
+                        Cancel
+                      </Button>
+                    </>
                   )}
                 </TableCell>
               </TableRow>
@@ -296,9 +497,7 @@ export default function AdminBookings() {
               <AlertCircle className="h-5 w-5 text-destructive" />
               Cancel Booking
             </DialogTitle>
-            <DialogDescription>
-              This action cannot be undone.
-            </DialogDescription>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
@@ -316,6 +515,162 @@ export default function AdminBookings() {
             <Button variant="destructive" onClick={handleCancelBooking}>
               Confirm Cancel
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Booking Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Booking</DialogTitle>
+            <DialogDescription>Admin can book rooms too.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label>Room</Label>
+              <Select
+                value={newRoomId ? String(newRoomId) : ""}
+                onValueChange={(val) => setNewRoomId(Number(val))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select room" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms
+                    .filter((r) => r.isActive)
+                    .map((room) => (
+                      <SelectItem key={room.id} value={String(room.id)}>
+                        {room.name} (Cap {room.capacity})
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {newBookingDate ? format(newBookingDate, "PP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={newBookingDate}
+                    onSelect={setNewBookingDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={newStartTime}
+                  onChange={(e) => setNewStartTime(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={newEndTime}
+                  onChange={(e) => setNewEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Attendees</Label>
+              <Input
+                type="number"
+                value={newAttendees}
+                onChange={(e) => setNewAttendees(Number(e.target.value))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleCreateBooking}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reschedule Dialog */}
+      <Dialog open={rescheduleDialogOpen} onOpenChange={setRescheduleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reschedule Booking</DialogTitle>
+            <DialogDescription>Update booking date & time.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div>
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {rescheduleDate ? format(rescheduleDate, "PP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={rescheduleDate}
+                    onSelect={setRescheduleDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={rescheduleStart}
+                  onChange={(e) => setRescheduleStart(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={rescheduleEnd}
+                  onChange={(e) => setRescheduleEnd(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleDialogOpen(false)}>
+              Close
+            </Button>
+            <Button onClick={handleReschedule}>Update</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

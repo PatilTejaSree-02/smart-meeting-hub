@@ -1,51 +1,60 @@
 package com.project.smartmeetingroom.service;
 
+import java.time.LocalDate;
+
+import org.springframework.stereotype.Service;
+
 import com.project.smartmeetingroom.dto.AdminAnalyticsResponse;
 import com.project.smartmeetingroom.repository.BookingRepository;
 import com.project.smartmeetingroom.repository.RoomRepository;
 import com.project.smartmeetingroom.repository.UserRepository;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 
 @Service
 public class AdminAnalyticsService {
 
-    private final RoomRepository roomRepo;
-    private final UserRepository userRepo;
-    private final BookingRepository bookingRepo;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
 
     public AdminAnalyticsService(
-            RoomRepository roomRepo,
-            UserRepository userRepo,
-            BookingRepository bookingRepo) {
-        this.roomRepo = roomRepo;
-        this.userRepo = userRepo;
-        this.bookingRepo = bookingRepo;
+            RoomRepository roomRepository,
+            UserRepository userRepository,
+            BookingRepository bookingRepository
+    ) {
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public AdminAnalyticsResponse getAnalytics(Long tenantId) {
 
         AdminAnalyticsResponse res = new AdminAnalyticsResponse();
 
-        res.totalRooms = roomRepo.countByTenantId(tenantId);
-        res.totalUsers = userRepo.countByTenantId(tenantId);
+        long totalRooms = roomRepository.countByTenantId(tenantId);
+        long totalUsers = userRepository.countByTenantId(tenantId);
+        long totalBookings = bookingRepository.countByTenantId(tenantId);
 
-        res.activeBookingsToday =
-                bookingRepo.countByTenantIdAndBookingDate(
-                        tenantId, LocalDate.now());
+        long bookingsToday = bookingRepository.countByTenantIdAndBookingDate(
+                tenantId,
+                LocalDate.now()
+        );
 
-        long totalBookings = bookingRepo.countByTenantId(tenantId);
-        long totalCapacity = roomRepo.sumCapacityByTenantId(tenantId);
+        long totalCapacity = roomRepository.sumCapacityByTenantId(tenantId);
 
-        if (totalCapacity == 0) {
-            res.averageOccupancy = 0;
-        } else {
-            res.averageOccupancy = (double) totalBookings / totalCapacity * 100;
+        // occupancy = (todayBookings / totalRooms) * 100 (simple metric)
+        double occupancyRate = 0.0;
+        if (totalRooms > 0) {
+            occupancyRate = ((double) bookingsToday / totalRooms) * 100;
         }
 
-        res.bookingsByDay = bookingRepo.bookingsByDay(tenantId);
-        res.bookingsByRoom = bookingRepo.bookingsByRoom(tenantId);
+        res.setTotalRooms(totalRooms);
+        res.setTotalUsers(totalUsers);
+        res.setTotalBookings(totalBookings);
+        res.setBookingsToday(bookingsToday);
+        res.setOccupancyRate(occupancyRate);
+
+        res.setBookingsByDay(bookingRepository.bookingsByDay(tenantId));
+        res.setBookingsByRoom(bookingRepository.bookingsByRoom(tenantId));
 
         return res;
     }

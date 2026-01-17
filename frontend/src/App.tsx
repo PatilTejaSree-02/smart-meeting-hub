@@ -1,9 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 
 import Index from "@/pages/Index";
-import Dashboard from "@/pages/Dashboard";
 import Rooms from "@/pages/Rooms";
-import RoomDetails from "@/pages/RoomDetails";
 import MyBookings from "@/pages/MyBookings";
 
 import AdminRooms from "@/pages/admin/AdminRooms";
@@ -11,6 +9,10 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminBookings from "@/pages/admin/AdminBookings";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+
+import UserDashboard from "./pages/user/UserDashboard";
+import UserBookings from "./pages/user/UserBookings";
+import BookingHistory from "./pages/user/BookingHistory";
 
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import UserLayout from "@/components/layout/UserLayout";
@@ -25,13 +27,13 @@ export default function App() {
 
       {/* USER AREA */}
       <Route element={<ProtectedRoute />}>
-        <Route element={<UserLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/rooms" element={<Rooms />} />
-          <Route path="/rooms/:id" element={<RoomDetails />} />
-          <Route path="/bookings" element={<MyBookings />} />
-        </Route>
-      </Route>
+  <Route element={<UserLayout />}>
+    <Route path="/dashboard" element={<UserDashboard />} />
+    <Route path="/bookings" element={<UserBookings />} />
+    <Route path="/history" element={<BookingHistory />} />
+    <Route path="/rooms" element={<Rooms />} />
+  </Route>
+</Route>
 
       {/* ADMIN AREA */}
       <Route element={<ProtectedRoute adminOnly />}>

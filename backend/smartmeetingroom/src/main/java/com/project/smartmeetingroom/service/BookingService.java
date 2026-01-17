@@ -107,4 +107,9 @@ public class BookingService {
         booking.setStatus("cancelled");
         bookingRepository.save(booking);
     }
+
+    public List<Booking> getAllBookings(Long tenantId) {
+    return bookingRepository.findByTenantId(tenantId);
+}
+
 }

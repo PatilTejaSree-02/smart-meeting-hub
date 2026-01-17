@@ -1,31 +1,26 @@
 package com.project.smartmeetingroom.controller;
 
-import com.project.smartmeetingroom.dto.AdminAnalyticsResponse;
-import com.project.smartmeetingroom.service.AdminAnalyticsService;
-import com.project.smartmeetingroom.security.JwtUtil;
-import io.jsonwebtoken.Claims;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
+import com.project.smartmeetingroom.dto.AdminAnalyticsResponse;
+import com.project.smartmeetingroom.security.JwtContextUtil;
+import com.project.smartmeetingroom.service.AdminAnalyticsService;
+
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/admin/analytics")
+@CrossOrigin(origins = "http://localhost:8081")
 public class AdminAnalyticsController {
 
-    private final AdminAnalyticsService service;
-    private final JwtUtil jwtUtil;
+    private final AdminAnalyticsService analyticsService;
+    private final JwtContextUtil jwt;
 
-    public AdminAnalyticsController(AdminAnalyticsService service, JwtUtil jwtUtil) {
-        this.service = service;
-        this.jwtUtil = jwtUtil;
+    public AdminAnalyticsController(AdminAnalyticsService analyticsService, JwtContextUtil jwt) {
+        this.analyticsService = analyticsService;
+        this.jwt = jwt;
     }
 
-    @GetMapping("/analytics")
-    public AdminAnalyticsResponse getAnalytics(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
-        Claims claims = jwtUtil.extractClaims(token);
-
-        Long tenantId = claims.get("tenantId", Long.class);
-
-        return service.getAnalytics(tenantId);
+    @GetMapping
+    public AdminAnalyticsResponse analytics() {
+        return analyticsService.getAnalytics(jwt.getTenantId());
     }
 }

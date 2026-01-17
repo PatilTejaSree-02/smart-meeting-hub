@@ -24,6 +24,11 @@ public class SecurityConfig {
         http
             .cors(cors -> {})
             .csrf(csrf -> csrf.disable())
+
+            // ✅ IMPORTANT: Disable default Spring security login
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**", "/error").permitAll()
                 .anyRequest().authenticated()

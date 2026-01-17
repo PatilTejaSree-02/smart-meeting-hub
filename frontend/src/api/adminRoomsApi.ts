@@ -11,6 +11,11 @@ export const createRoom = async (room: Partial<Room>) => {
   return res.data;
 };
 
+export const updateRoom = async (id: number, room: any) => {
+  const res = await api.put(`/admin/rooms/${id}`, room);
+  return res.data;
+};
+
 export const deactivateRoom = async (id: number) => {
   await api.delete(`/admin/rooms/${id}`);
 };

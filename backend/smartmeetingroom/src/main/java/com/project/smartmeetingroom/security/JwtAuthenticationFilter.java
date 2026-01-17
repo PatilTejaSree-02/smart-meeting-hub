@@ -70,9 +70,8 @@ UsernamePasswordAuthenticationToken authentication =
             List.of(new SimpleGrantedAuthority(role))
     );
 
-        authentication.setDetails(
-                new WebAuthenticationDetailsSource().buildDetails(request)
-        );
+        authentication.setDetails(claims);
+
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(request, response);

@@ -1,15 +1,26 @@
 package com.project.smartmeetingroom.dto;
 
+import com.project.smartmeetingroom.entity.User;
+
 public class UpdateUserRequest {
-
+    private String firstName;
+    private String lastName;
+    private String department;
     private String role;
-    private Boolean active;
+    private User.Status status;
 
-    public UpdateUserRequest() {}
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
 
     public String getRole() { return role; }
-    public Boolean getActive() { return active; }
-
     public void setRole(String role) { this.role = role; }
-    public void setActive(Boolean active) { this.active = active; }
+
+    public User.Status getStatus() { return status; }
+    public void setStatus(User.Status status) { this.status = status; }
 }
