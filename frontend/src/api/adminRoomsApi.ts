@@ -19,3 +19,4 @@ export const updateRoom = async (id: number, room: any) => {
 export const deactivateRoom = async (id: number) => {
   await api.delete(`/admin/rooms/${id}`);
 };
+

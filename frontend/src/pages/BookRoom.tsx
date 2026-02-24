@@ -36,7 +36,7 @@ export default function BookRoom() {
   };
 
   return (
-    <div>
+    <div className="bg-white rounded-2xl p-6 relative overflow-visible">
       <h2>Book Room</h2>
 
       <select value={roomId} onChange={e => setRoomId(e.target.value)}>

@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import "./index.css";
 
 import Index from "@/pages/Index";
 import Rooms from "@/pages/Rooms";

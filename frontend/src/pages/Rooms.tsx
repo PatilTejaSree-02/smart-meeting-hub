@@ -18,22 +18,67 @@ export default function Rooms() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p>Loading rooms...</p>;
+  if (loading) {
+    return (
+      <div className="p-6 text-slate-500">Loading rooms...</div>
+    );
+  }
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Meeting Rooms</h1>
+      {/* PAGE TITLE */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Meeting Rooms</h1>
+        <p className="text-slate-500 text-sm">
+          Select a room to view details and book
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* ROOMS GRID */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {rooms.map((room) => (
           <div
             key={room.id}
-            className="border rounded-lg p-4 cursor-pointer hover:shadow"
             onClick={() => navigate(`/rooms/${room.id}`)}
+            className="group cursor-pointer rounded-xl overflow-hidden border bg-white
+                       hover:shadow-xl transition"
           >
-            <h2 className="text-lg font-semibold">{room.name}</h2>
-            <p className="text-sm text-gray-500">{room.location}</p>
-            <p className="mt-2">Capacity: {room.capacity}</p>
+            {/* IMAGE */}
+            <div className="h-40 bg-slate-200 relative">
+              <img
+                src="https://images.unsplash.com/photo-1524758631624-e2822e304c36"
+                alt={room.name}
+                className="h-full w-full object-cover group-hover:scale-105 transition"
+              />
+
+              {/* CAPACITY BADGE */}
+              <div className="absolute top-3 right-3 bg-emerald-600 text-white
+                              text-xs px-3 py-1 rounded-full shadow">
+                {room.capacity} seats
+              </div>
+            </div>
+
+            {/* CONTENT */}
+            <div className="p-4">
+              <h2 className="text-lg font-semibold">{room.name}</h2>
+
+              <p className="text-sm text-slate-500 mt-1">
+                {room.location || "Office Building"}
+              </p>
+
+              <div className="flex items-center gap-4 text-xs text-slate-500 mt-3">
+                <span>Floor {room.floor ?? "-"}</span>
+                <span>•</span>
+                <span>Available</span>
+              </div>
+
+              <button
+                className="mt-4 w-full rounded-lg bg-teal-600 text-white
+                           py-2 text-sm font-semibold hover:bg-teal-700 transition"
+              >
+                Book Room
+              </button>
+            </div>
           </div>
         ))}
       </div>
