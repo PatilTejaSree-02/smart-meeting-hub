@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-import { getAdminAnalytics } from "@/api/adminAnalyticsApi";
+import { getAdminAnalytics } from "@/api/AdminAnalyticsApi";
 import { getMyProfile } from "@/api/userApi";
-import { getMyBookings } from "@/api/myBookingsApi";
+import { getMyBookings } from "@/api/MyBookingsApi";
 
 type AdminProfile = {
   id: number;
