@@ -10,15 +10,15 @@ spring:
     name: smart-meeting-room
 
   datasource:
-    url: jdbc:mysql://localhost:3306/meeting_room_system?useSSL=false&serverTimezone=UTC
-    username: root
-    password: Santosh@1497
+    url: jdbc:mysql://mysql-98ade40-patiltejasree02-e0b.l.aivencloud.com:10960/defaultdb?useSSL=true&requireSSL=true&serverTimezone=UTC
+    username: avnadmin
+    password: AVNS_3QrrNtikjN6JbIDfCx4
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
