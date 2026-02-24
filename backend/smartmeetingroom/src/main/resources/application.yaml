@@ -10,9 +10,9 @@ spring:
     name: smart-meeting-room
 
   datasource:
-    url: jdbc:mysql://mysql-98ade40-patiltejasree02-e0b.l.aivencloud.com:10960/defaultdb?useSSL=true&requireSSL=true&serverTimezone=UTC
-    username: avnadmin
-    password: AVNS_3QrrNtikjN6JbIDfCx4
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -25,7 +25,7 @@ spring:
         format_sql: true
 
 jwt:
-  secret: bXktc3VwZXItc2VjcmV0LWp3dC1rZXktZm9yLXNtYXJ0LW1lZXRpbmctcm9vbS0yMDI1
+  secret: ${JWT_SECRET}
   expiration: 600000
 
 logging:
