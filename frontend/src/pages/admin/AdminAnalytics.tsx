@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAdminAnalytics } from "@/api/adminAnalyticsApi";
+import { getAdminAnalytics } from "@/api/AdminAnalyticsApi";
 
 type BookingByDay = { day: string; count: number };
 type BookingByRoom = { roomName: string; count: number };
