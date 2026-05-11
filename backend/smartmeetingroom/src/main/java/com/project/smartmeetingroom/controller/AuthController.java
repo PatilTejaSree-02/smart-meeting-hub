@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.project.smartmeetingroom.dto.LoginRequest;
 import com.project.smartmeetingroom.dto.LoginResponse;
+import com.project.smartmeetingroom.dto.SignupRequest;
 import com.project.smartmeetingroom.service.AuthService;
 
 @RestController
@@ -16,8 +17,24 @@ public class AuthController {
         this.authService = authService;
     }
 
+    /* ================= LOGIN ================= */
+
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public LoginResponse login(
+            @RequestBody LoginRequest request
+    ) {
         return authService.login(request);
+    }
+
+    /* ================= SIGNUP ================= */
+
+    @PostMapping("/signup")
+    public String signup(
+            @RequestBody SignupRequest request
+    ) {
+
+        authService.signup(request);
+
+        return "User registered successfully";
     }
 }

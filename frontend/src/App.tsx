@@ -2,9 +2,10 @@ import { Routes, Route } from "react-router-dom";
 import "./index.css";
 
 import Index from "@/pages/Index";
+import Signup from "@/pages/auth/Signup";
+
 import Rooms from "@/pages/Rooms";
-import MyBookings from "@/pages/MyBookings";
-import BookRoom from "@/pages/BookRoom"; // ✅ ADDED
+import BookRoom from "@/pages/BookRoom";
 
 import AdminRooms from "@/pages/admin/AdminRooms";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -24,35 +25,88 @@ export default function App() {
   return (
     <Routes>
 
-      {/* PUBLIC */}
+      {/* ================= PUBLIC ================= */}
+
       <Route path="/" element={<Index />} />
 
-      {/* USER AREA */}
+      <Route path="/signup" element={<Signup />} />
+
+      {/* ================= USER AREA ================= */}
+
       <Route element={<ProtectedRoute />}>
+
         <Route element={<UserLayout />}>
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/bookings" element={<MyBookings />} />
-          <Route path="/history" element={<BookingHistory />} />
-          <Route path="/rooms" element={<Rooms />} />
 
-          {/* ✅ FIXED: BOOK ROOM ROUTE */}
-          <Route path="/book/:id" element={<BookRoom />} />
+          <Route
+            path="/dashboard"
+            element={<UserDashboard />}
+          />
+
+          <Route
+            path="/bookings"
+            element={<UserBookings />}
+          />
+
+          <Route
+            path="/history"
+            element={<BookingHistory />}
+          />
+
+          <Route
+            path="/rooms"
+            element={<Rooms />}
+          />
+
+          <Route
+            path="/book/:id"
+            element={<BookRoom />}
+          />
+
         </Route>
+
       </Route>
 
-      {/* ADMIN AREA */}
+      {/* ================= ADMIN AREA ================= */}
+
       <Route element={<ProtectedRoute adminOnly />}>
+
         <Route element={<AdminLayout />}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/bookings" element={<AdminBookings />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
-          <Route path="/admin/rooms" element={<AdminRooms />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
+
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboard />}
+          />
+
+          <Route
+            path="/admin/bookings"
+            element={<AdminBookings />}
+          />
+
+          <Route
+            path="/admin/analytics"
+            element={<AdminAnalytics />}
+          />
+
+          <Route
+            path="/admin/rooms"
+            element={<AdminRooms />}
+          />
+
+          <Route
+            path="/admin/users"
+            element={<AdminUsers />}
+          />
+
         </Route>
+
       </Route>
 
-      {/* FALLBACK */}
-      <Route path="*" element={<p>Not Found</p>} />
+      {/* ================= FALLBACK ================= */}
+
+      <Route
+        path="*"
+        element={<p>Not Found</p>}
+      />
 
     </Routes>
   );
