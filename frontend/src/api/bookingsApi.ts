@@ -1,25 +1,39 @@
 import api from "./api";
 
+/* ================= TYPES ================= */
+
 export type Booking = {
   id: number;
-  tenantId: number;
-  roomId: number;
-  userId: number;
+  roomId: number;          // still useful internally
+  roomName: string;        // ✅ NEW (for UI)
   title: string;
-  bookingDate: string;  // yyyy-MM-dd
-  startTime: string;    // HH:mm
-  endTime: string;      // HH:mm
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
   attendees: number;
   status: string;
 };
 
-// ✅ My bookings for logged in user
+/* ================= USER BOOKINGS ================= */
+
+// ✅ Get logged-in user's bookings
 export const getMyBookings = async (): Promise<Booking[]> => {
   const res = await api.get("/bookings");
   return res.data;
 };
 
-// ✅ Create booking (userId + tenantId automatically from backend token)
+/* ================= ROOM BOOKINGS ================= */
+
+// ✅ Get bookings for a specific room (used in RoomDetails)
+export const getBookingsForRoom = async (
+  roomId: number
+): Promise<Booking[]> => {
+  const res = await api.get(`/bookings/room/${roomId}`);
+  return res.data;
+};
+
+/* ================= CREATE ================= */
+
 export const createBooking = async (payload: {
   roomId: number;
   title: string;
@@ -32,7 +46,22 @@ export const createBooking = async (payload: {
   return res.data;
 };
 
-// ✅ Cancel booking
+/* ================= RESCHEDULE ================= */
+
+export const rescheduleBooking = async (
+  bookingId: number,
+  payload: {
+    bookingDate: string;
+    startTime: string;
+    endTime: string;
+  }
+) => {
+  const res = await api.put(`/bookings/${bookingId}/reschedule`, payload);
+  return res.data;
+};
+
+/* ================= CANCEL ================= */
+
 export const cancelBooking = async (id: number) => {
   await api.delete(`/bookings/${id}`);
 };

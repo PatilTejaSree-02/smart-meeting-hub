@@ -8,7 +8,6 @@ import com.project.smartmeetingroom.service.AuthService;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:8081")
 public class AuthController {
 
     private final AuthService authService;

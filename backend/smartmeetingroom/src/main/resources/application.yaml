@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
   error:
     include-message: always
     include-binding-errors: always
@@ -10,9 +10,9 @@ spring:
     name: smart-meeting-room
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://mysql-98ade40-patiltejasree02-e0b.l.aivencloud.com:10960/defaultdb?ssl-mode=REQUIRED
+    username: avnadmin
+    password: AVNS_3QrrNtikjN6JbIDfCx4
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

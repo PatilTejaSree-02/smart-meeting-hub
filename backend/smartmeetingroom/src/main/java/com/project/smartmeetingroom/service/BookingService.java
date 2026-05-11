@@ -1,28 +1,36 @@
 package com.project.smartmeetingroom.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.project.smartmeetingroom.dto.BookingResponse;
 import com.project.smartmeetingroom.dto.CreateBookingRequest;
 import com.project.smartmeetingroom.dto.RescheduleBookingRequest;
 import com.project.smartmeetingroom.entity.Booking;
+import com.project.smartmeetingroom.entity.Room;
 import com.project.smartmeetingroom.repository.BookingRepository;
+import com.project.smartmeetingroom.repository.RoomRepository;
 
 @Service
 public class BookingService {
 
     private final BookingRepository bookingRepository;
+    private final RoomRepository roomRepository;
 
-    public BookingService(BookingRepository bookingRepository) {
+    public BookingService(
+            BookingRepository bookingRepository,
+            RoomRepository roomRepository
+    ) {
         this.bookingRepository = bookingRepository;
+        this.roomRepository = roomRepository;
     }
 
     /* ================= CREATE ================= */
 
-    public Booking createBooking(CreateBookingRequest request) {
+    public BookingResponse createBooking(CreateBookingRequest request) {
 
-        // Check for overlapping bookings
         boolean conflict = bookingRepository.hasConflict(
                 request.getRoomId(),
                 request.getTenantId(),
@@ -46,18 +54,23 @@ public class BookingService {
         booking.setAttendees(request.getAttendees());
         booking.setStatus("confirmed");
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        return mapToResponse(saved);
     }
 
     /* ================= USER BOOKINGS ================= */
 
-    public List<Booking> getUserBookings(Long userId, Long tenantId) {
-        return bookingRepository.findByUserIdAndTenantId(userId, tenantId);
+    public List<BookingResponse> getUserBookings(Long userId, Long tenantId) {
+        return bookingRepository.findByUserIdAndTenantId(userId, tenantId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     /* ================= RESCHEDULE ================= */
 
-    public Booking rescheduleBooking(
+    public BookingResponse rescheduleBooking(
             Long bookingId,
             Long tenantId,
             RescheduleBookingRequest request
@@ -90,7 +103,9 @@ public class BookingService {
         booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
 
-        return bookingRepository.save(booking);
+        Booking updated = bookingRepository.save(booking);
+
+        return mapToResponse(updated);
     }
 
     /* ================= CANCEL ================= */
@@ -108,8 +123,34 @@ public class BookingService {
         bookingRepository.save(booking);
     }
 
-    public List<Booking> getAllBookings(Long tenantId) {
-    return bookingRepository.findByTenantId(tenantId);
-}
+    /* ================= ADMIN ================= */
 
+    public List<BookingResponse> getAllBookings(Long tenantId) {
+        return bookingRepository.findByTenantId(tenantId)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /* ================= MAPPER ================= */
+
+    private BookingResponse mapToResponse(Booking booking) {
+
+        Room room = roomRepository.findById(booking.getRoomId())
+                .orElse(null);
+
+        BookingResponse res = new BookingResponse();
+
+        res.setId(booking.getId());
+        res.setRoomId(booking.getRoomId());
+        res.setRoomName(room != null ? room.getName() : "Unknown"); // ✅ FIX
+        res.setTitle(booking.getTitle());
+        res.setBookingDate(booking.getBookingDate());
+        res.setStartTime(booking.getStartTime());
+        res.setEndTime(booking.getEndTime());
+        res.setAttendees(booking.getAttendees());
+        res.setStatus(booking.getStatus());
+
+        return res;
+    }
 }

@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.project.smartmeetingroom.dto.BookingResponse;
 import com.project.smartmeetingroom.dto.CreateBookingRequest;
-import com.project.smartmeetingroom.entity.Booking;
 import com.project.smartmeetingroom.security.JwtContextUtil;
 import com.project.smartmeetingroom.service.BookingService;
 
@@ -25,18 +25,18 @@ public class BookingController {
         this.jwt = jwt;
     }
 
-    // ---------------- USER BOOKINGS ----------------
+    // ✅ GET USER BOOKINGS
     @GetMapping
-    public List<Booking> myBookings() {
+    public List<BookingResponse> myBookings() {
         return bookingService.getUserBookings(
                 jwt.getUserId(),
                 jwt.getTenantId()
         );
     }
 
-    // ---------------- CREATE BOOKING ----------------
+    // ✅ CREATE BOOKING
     @PostMapping
-    public Booking create(@RequestBody CreateBookingRequest request) {
+    public BookingResponse create(@RequestBody CreateBookingRequest request) {
 
         request.setUserId(jwt.getUserId());
         request.setTenantId(jwt.getTenantId());
@@ -44,7 +44,7 @@ public class BookingController {
         return bookingService.createBooking(request);
     }
 
-    // ---------------- CANCEL BOOKING ----------------
+    // ✅ CANCEL BOOKING
     @DeleteMapping("/{id}")
     public void cancel(@PathVariable Long id) {
         bookingService.cancelBooking(id, jwt.getTenantId());

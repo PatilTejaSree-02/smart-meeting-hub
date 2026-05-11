@@ -4,6 +4,7 @@ import "./index.css";
 import Index from "@/pages/Index";
 import Rooms from "@/pages/Rooms";
 import MyBookings from "@/pages/MyBookings";
+import BookRoom from "@/pages/BookRoom"; // ✅ ADDED
 
 import AdminRooms from "@/pages/admin/AdminRooms";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -28,13 +29,16 @@ export default function App() {
 
       {/* USER AREA */}
       <Route element={<ProtectedRoute />}>
-  <Route element={<UserLayout />}>
-    <Route path="/dashboard" element={<UserDashboard />} />
-    <Route path="/bookings" element={<UserBookings />} />
-    <Route path="/history" element={<BookingHistory />} />
-    <Route path="/rooms" element={<Rooms />} />
-  </Route>
-</Route>
+        <Route element={<UserLayout />}>
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/bookings" element={<MyBookings />} />
+          <Route path="/history" element={<BookingHistory />} />
+          <Route path="/rooms" element={<Rooms />} />
+
+          {/* ✅ FIXED: BOOK ROOM ROUTE */}
+          <Route path="/book/:id" element={<BookRoom />} />
+        </Route>
+      </Route>
 
       {/* ADMIN AREA */}
       <Route element={<ProtectedRoute adminOnly />}>
