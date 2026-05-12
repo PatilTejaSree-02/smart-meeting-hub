@@ -3,6 +3,7 @@ import "./index.css";
 
 import Index from "@/pages/Index";
 import Signup from "@/pages/auth/Signup";
+import AdminSignup from "@/pages/auth/AdminSignup";
 
 import Rooms from "@/pages/Rooms";
 import BookRoom from "@/pages/BookRoom";
@@ -30,7 +31,7 @@ export default function App() {
       <Route path="/" element={<Index />} />
 
       <Route path="/signup" element={<Signup />} />
-
+      <Route path="/admin-signup" element={<AdminSignup />} />
       {/* ================= USER AREA ================= */}
 
       <Route element={<ProtectedRoute />}>

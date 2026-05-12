@@ -23,10 +23,25 @@ spring:
     properties:
       hibernate:
         format_sql: true
+      
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: smartmeetinghub@gmail.com
+    password: amlxwcaqedoqmsha
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 
 jwt:
   secret: ${JWT_SECRET}
   expiration: 600000
+
 
 logging:
   level:

@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.project.smartmeetingroom.dto.AdminSignupRequest;
 import com.project.smartmeetingroom.dto.LoginRequest;
 import com.project.smartmeetingroom.dto.LoginResponse;
 import com.project.smartmeetingroom.dto.SignupRequest;
@@ -52,7 +53,6 @@ public class AuthService {
             );
         }
 
-        // Find tenant
         Tenant tenant = tenantRepository
                 .findBySubdomain(request.getTenant())
                 .orElseThrow(() ->
@@ -62,7 +62,6 @@ public class AuthService {
                         )
                 );
 
-        // Find user
         User user = userRepository
                 .findByEmailAndTenantId(
                         request.getEmail(),
@@ -75,7 +74,6 @@ public class AuthService {
                         )
                 );
 
-        // Check active status
         if (user.getStatus() != User.Status.active) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
@@ -83,7 +81,6 @@ public class AuthService {
             );
         }
 
-        // Check password
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPasswordHash()
@@ -94,7 +91,6 @@ public class AuthService {
             );
         }
 
-        // Generate token
         String token = jwtUtil.generateToken(
                 user.getId(),
                 user.getEmail(),
@@ -111,11 +107,10 @@ public class AuthService {
         );
     }
 
-    /* ================= SIGNUP ================= */
+    /* ================= EMPLOYEE SIGNUP ================= */
 
     public void signup(SignupRequest request) {
 
-        // Find tenant/company
         Tenant tenant = tenantRepository
                 .findBySubdomain(request.getSubdomain())
                 .orElseThrow(() ->
@@ -125,7 +120,6 @@ public class AuthService {
                         )
                 );
 
-        // Check if user already exists
         boolean exists = userRepository
                 .findByEmailAndTenantId(
                         request.getEmail(),
@@ -140,7 +134,6 @@ public class AuthService {
             );
         }
 
-        // Create user
         User user = new User();
 
         user.setFirstName(request.getFirstName());
@@ -151,7 +144,6 @@ public class AuthService {
 
         user.setDepartment(request.getDepartment());
 
-        // Encrypt password
         user.setPasswordHash(
                 passwordEncoder.encode(
                         request.getPassword()
@@ -160,13 +152,90 @@ public class AuthService {
 
         user.setTenantId(tenant.getId());
 
-        // Default role
         user.setRole("ROLE_USER");
 
-        // Default status
         user.setStatus(User.Status.active);
 
-        // Save user
         userRepository.save(user);
+    }
+
+    /* ================= ADMIN SIGNUP ================= */
+
+    public String adminSignup(
+            AdminSignupRequest request
+    ) {
+
+        boolean tenantExists = tenantRepository
+                .findBySubdomain(request.getSubdomain())
+                .isPresent();
+
+        if (tenantExists) {
+            throw new RuntimeException(
+                    "Company code already exists"
+            );
+        }
+
+        Tenant tenant = new Tenant();
+
+        tenant.setCompanyName(
+                request.getCompanyName()
+        );
+
+        tenant.setSubdomain(
+                request.getSubdomain()
+        );
+
+        tenant.setCompanyEmail(
+                request.getEmail()
+        );
+
+        tenant.setStatus("ACTIVE");
+
+        tenant.setPlanType("FREE");
+
+        tenant.setMaxUsers(50);
+
+        tenant.setMaxRooms(10);
+
+        tenant.setMaxBookingsPerMonth(500);
+
+        Tenant savedTenant =
+                tenantRepository.save(tenant);
+
+        boolean emailExists = userRepository
+                .findUserByEmailOnly(request.getEmail())
+                .isPresent();
+
+        if (emailExists) {
+            throw new RuntimeException(
+                    "Email already exists"
+            );
+        }
+
+        User admin = new User();
+
+        admin.setTenantId(savedTenant.getId());
+
+        admin.setFirstName(request.getFirstName());
+
+        admin.setLastName(request.getLastName());
+
+        admin.setEmail(request.getEmail());
+
+        admin.setPasswordHash(
+                passwordEncoder.encode(
+                        request.getPassword()
+                )
+        );
+
+        admin.setDepartment(request.getDepartment());
+
+        admin.setRole("ROLE_ADMIN");
+
+        admin.setStatus(User.Status.active);
+
+        userRepository.save(admin);
+
+        return "Company Admin Registered Successfully";
     }
 }

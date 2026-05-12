@@ -31,7 +31,7 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error").permitAll() // ✅ allow login
+                .requestMatchers("/api/auth/**","/api/email/**", "/error").permitAll() // ✅ allow login
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -43,16 +43,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Allow ALL origins (for development)
+        //  Allow ALL origins (for development)
         config.setAllowedOriginPatterns(List.of("*"));
 
-        // ✅ Allow all methods
+        //  Allow all methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // ✅ Allow all headers
+        // Allow all headers
         config.setAllowedHeaders(List.of("*"));
 
-        // ✅ Allow credentials (JWT, cookies, etc.)
+        //  Allow credentials (JWT, cookies, etc.)
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
